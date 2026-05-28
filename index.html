@@ -273,8 +273,8 @@ const activeController = isMobile ? MController : Controller;
 //  THREE.JS SETUP
 // ═══════════════════════════════════════════════════════════════
 const scene    = new THREE.Scene();
-scene.background = new THREE.Color(0x030508);
-scene.fog        = new THREE.Fog(0x030508, 6, 50);
+scene.background = new THREE.Color(0x06090f);
+scene.fog        = new THREE.Fog(0x06090f, 8, 55);
 
 const camera   = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: !isMobile });
@@ -289,12 +289,12 @@ window.addEventListener('resize', () => {
 });
 
 // Lighting
-scene.add(new THREE.HemisphereLight(0xc8e6ff, 0x1a2a1a, 0.5));
+scene.add(new THREE.HemisphereLight(0x8eb8e0, 0x0a1020, 0.45));
 const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
 dirLight.position.set(5, 10, 7.5);
 scene.add(dirLight);
-// Accent rim light (cyan)
-const rimLight = new THREE.DirectionalLight(0x00ccff, 0.4);
+// Accent rim light (violet)
+const rimLight = new THREE.DirectionalLight(0x7c4dff, 0.35);
 rimLight.position.set(-5, 2, -3);
 scene.add(rimLight);
 
@@ -387,6 +387,7 @@ function updateDiffLabel() {
   diffLabel.textContent = tier.label;
   const t = DIFF_TIERS.indexOf(tier);
   const colors = ['var(--clr-muted)','var(--clr-accent)','var(--clr-accent2)','var(--clr-gold)','var(--clr-danger)'];
+  diffLabel.style.borderColor = t >= 2 ? colors[t] : 'rgba(255,255,255,0.05)';
   diffLabel.style.color = colors[t] || 'var(--clr-muted)';
   diffLabel.style.textShadow = t >= 3 ? 'var(--glow-danger)' : '';
 }
@@ -963,8 +964,8 @@ function applyPowerUp(id) {
     activeController.isGhostMode = true;
     ghostIndicator.style.display = 'block';
     ghostIndicator.textContent   =
-      id === 'TURBO_FLIP' ? '▸ TURBO FLIP' :
-      id === 'SHIELD'     ? '▸ SHIELDED'   : '▸ GHOST';
+      id === 'TURBO_FLIP' ? '▸ TURBO' :
+      id === 'SHIELD'     ? '▸ SHIELD' : '▸ GHOST';
   }
   if (id === 'TINY') {
     player.group.scale.set(0.5, 0.5, 0.5);
@@ -1172,4 +1173,4 @@ function animate() {
 animate();
 </script>
 </body>
-</html>
+          </html>
