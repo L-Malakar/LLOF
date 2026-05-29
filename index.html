@@ -72,7 +72,7 @@
 <!-- ═══ SETTINGS MODAL ══════════════════════════════════════════ -->
 <div id="settings-modal">
   <span id="closeSettingsBtn" class="close-btn">&times;</span>
-  <div class="modal-title">// SETTINGS</div>
+  <div class="modal-title">SETTINGS</div>
 
   <!-- Tabs -->
   <div class="settings-tabs">
@@ -141,7 +141,17 @@
   </div>
 </div>
 
-<!-- ═══ COUNTDOWN ═══════════════════════════════════════════════ -->
+<!-- ═══ MAP SELECTOR ════════════════════════════════════════════ -->
+<div id="map-btn-wrap">
+  <button id="mapBtn"><span>MAP</span><span class="key-badge">M</span></button>
+</div>
+
+<div id="map-selector" style="display:none;">
+  <div class="map-sel-title">MAP SKIN</div>
+  <div class="map-options" id="map-options"></div>
+</div>
+
+<!-- ═══ COUNTDOWN ═════════════════════════════════════════════════ -->
 <div id="countdown-overlay">
   <span id="countdown-text">3</span>
 </div>
@@ -150,7 +160,7 @@
 <div id="game-over-screen">
   <div class="game-over-header">
     <h1 class="crash-title">CRASHED</h1>
-    <div class="crash-subtitle">// PROTOCOL TERMINATED · L.MALAKAR</div>
+    <div class="crash-subtitle">PROTOCOL TERMINATED · L.MALAKAR</div>
   </div>
   <div class="game-over-card">
     <div class="go-stats">
@@ -212,7 +222,7 @@ import * as THREE from 'https://unpkg.com/three@0.136.0/build/three.module.js';
 import { Controller }         from './controller.js';
 import { MController }        from './Mcontroller.js';
 import { Player }             from './player.js';
-import { WorldManager }       from './world.js';
+import { WorldManager, SKIN_CONFIGS } from './world.js';
 import { CollectableManager, POWERUP_DEFS } from './collectable.js';
 import {
   startMusic, toggleMute, toggleSFX,
@@ -273,9 +283,6 @@ const activeController = isMobile ? MController : Controller;
 //  THREE.JS SETUP
 // ═══════════════════════════════════════════════════════════════
 const scene    = new THREE.Scene();
-scene.background = new THREE.Color(0x06090f);
-scene.fog        = new THREE.Fog(0x06090f, 8, 55);
-
 const camera   = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: !isMobile });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
@@ -289,12 +296,12 @@ window.addEventListener('resize', () => {
 });
 
 // Lighting
-scene.add(new THREE.HemisphereLight(0x8eb8e0, 0x0a1020, 0.45));
+const hemiLight = new THREE.HemisphereLight(0xffffff, 0x000000, 0.5);
+scene.add(hemiLight);
 const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
 dirLight.position.set(5, 10, 7.5);
 scene.add(dirLight);
-// Accent rim light (violet)
-const rimLight = new THREE.DirectionalLight(0x7c4dff, 0.35);
+const rimLight = new THREE.DirectionalLight(0xffffff, 0.4);
 rimLight.position.set(-5, 2, -3);
 scene.add(rimLight);
 
@@ -326,11 +333,28 @@ let coins         = parseInt( localStorage.getItem('paperPlane_coins')      || '
 let ownedPlanes   = JSON.parse(localStorage.getItem('paperPlane_owned')     || '[0]');
 let currentPlane  = parseInt( localStorage.getItem('paperPlane_current')    || '0');
 let viewIndex     = currentPlane;
+let currentMap    = localStorage.getItem('paperPlane_map') || 'classic';
+let ownedMaps     = JSON.parse(localStorage.getItem('paperPlane_ownedMaps') || '["classic"]');
+
+// ── Apply map skin to scene-level properties ──────────────────
+function applyMapToScene() {
+  const cfg = SKIN_CONFIGS[currentMap];
+  scene.background = new THREE.Color(cfg.bg);
+  scene.fog = new THREE.Fog(cfg.fogColor, cfg.fogNear, cfg.fogFar);
+  rimLight.color.setHex(cfg.rimLight.color);
+  rimLight.intensity = cfg.rimLight.intensity;
+  hemiLight.color.setHex(cfg.hemiLight.sky);
+  hemiLight.groundColor.setHex(cfg.hemiLight.ground);
+  hemiLight.intensity = cfg.hemiLight.intensity;
+}
+applyMapToScene();
 
 function saveProgress() {
-  localStorage.setItem('paperPlane_coins',   coins.toString());
-  localStorage.setItem('paperPlane_owned',   JSON.stringify(ownedPlanes));
-  localStorage.setItem('paperPlane_current', currentPlane.toString());
+  localStorage.setItem('paperPlane_coins',     coins.toString());
+  localStorage.setItem('paperPlane_owned',     JSON.stringify(ownedPlanes));
+  localStorage.setItem('paperPlane_current',   currentPlane.toString());
+  localStorage.setItem('paperPlane_map',       currentMap);
+  localStorage.setItem('paperPlane_ownedMaps', JSON.stringify(ownedMaps));
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -343,8 +367,16 @@ let collectables;
 function initGameObjects() {
   player      = new Player(scene);
   player.setPlaneType(currentPlane);
-  world        = new WorldManager(scene, isMobile);
+  player.setMapSkin(currentMap);
+  world        = new WorldManager(scene, isMobile, currentMap);
   collectables = new CollectableManager(scene, isMobile);
+}
+
+function rebuildWorld() {
+  scene.remove(player.group);
+  world.dispose();
+  collectables.dispose();
+  initGameObjects();
 }
 initGameObjects();
 
@@ -550,6 +582,9 @@ if (!isMobile) {
     if (k === Controller.binds.settings) {
       openSettings(); return;
     }
+    if (k === 'm' && gameState === 'MENU') {
+      mapBtn.click(); return;
+    }
   });
 } else {
   // Mobile: hide keybinds tab
@@ -724,6 +759,8 @@ playBtn.addEventListener('click', () => {
   menuUI.style.opacity  = '0';
   menuStats.style.opacity = '0';
   mainSettingsBtn.style.display = 'none';
+  document.getElementById('map-btn-wrap').style.display = 'none';
+  document.getElementById('map-selector').style.display = 'none';
   setTimeout(() => { menuUI.style.display = 'none'; menuStats.style.display = 'none'; }, 600);
   hud.style.display = 'block';
   sessionCoins = 0;
@@ -758,23 +795,18 @@ function goHome() {
 
   if (isMobile) MController.reset();
 
-  // Dispose old game objects
-  scene.remove(player.group);
-  world.chunks.forEach(c => scene.remove(c));
-  world.obstacles.forEach(o => { o.geometry.dispose(); o.material.dispose(); });
-  world.obstacles.length = 0;
-  collectables.dispose();
+  rebuildWorld();
   clearPowerUpHUD();
-
-  initGameObjects();
 
   gameOverUI.style.display = 'none';
   hud.style.display        = 'none';
   menuUI.style.display     = 'block';
   menuStats.style.display  = 'block';
   mainSettingsBtn.style.display = 'block';
+  document.getElementById('map-btn-wrap').style.display = 'block';
   syncHUD();
   updateMenuUI();
+  renderMapSelector();
   setTimeout(() => { menuUI.style.opacity = '1'; menuStats.style.opacity = '1'; }, 10);
 }
 
@@ -798,15 +830,8 @@ rebootBtn.addEventListener('click', () => {
 
   if (isMobile) MController.reset();
 
-  // Dispose
-  scene.remove(player.group);
-  world.chunks.forEach(c => scene.remove(c));
-  world.obstacles.forEach(o => { o.geometry.dispose(); o.material.dispose(); });
-  world.obstacles.length = 0;
-  collectables.dispose();
+  rebuildWorld();
   clearPowerUpHUD();
-
-  initGameObjects();
   player.group.position.set(0, 0, 0);
   gameOverUI.style.display = 'none';
   hud.style.display        = 'block';
@@ -1014,6 +1039,118 @@ function handlePowerUpExpiry(expiredIds) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+//  MAP SELECTOR
+// ═══════════════════════════════════════════════════════════════
+const mapBtn      = document.getElementById('mapBtn');
+const mapSelector = document.getElementById('map-selector');
+const mapOpts     = document.getElementById('map-options');
+
+function renderMapSelector() {
+  mapOpts.innerHTML = '';
+  Object.entries(SKIN_CONFIGS).forEach(([id, cfg]) => {
+    const owned  = ownedMaps.includes(id);
+    const active = currentMap === id;
+
+    const card = document.createElement('div');
+    card.className = 'map-card' + (active ? ' active' : '') + (!owned ? ' locked' : '');
+
+    let statusHTML = '';
+    if (active) {
+      statusHTML = '<span class="map-status map-status-active">✓ ACTIVE</span>';
+    } else if (owned) {
+      statusHTML = '<span class="map-status">TAP TO SELECT</span>';
+    } else {
+      statusHTML = `<span class="map-status map-status-price">⬡ ${cfg.price}</span>`;
+    }
+
+    card.innerHTML = `
+      <div class="map-card-img-wrap"><img class="map-card-img" src="${cfg.img}" alt="${cfg.label}" loading="lazy"></div>
+      <div class="map-card-name">${cfg.label}</div>
+      <div class="map-card-desc">${cfg.desc}</div>
+      ${statusHTML}
+    `;
+
+    card.addEventListener('click', () => selectMap(id));
+    mapOpts.appendChild(card);
+  });
+}
+
+function selectMap(mapId) {
+  if (mapId === currentMap) { mapSelector.style.display = 'none'; return; }
+
+  const cfg = SKIN_CONFIGS[mapId];
+
+  if (!ownedMaps.includes(mapId)) {
+    if (coins >= cfg.price) {
+      coins -= cfg.price;
+      ownedMaps.push(mapId);
+      saveProgress();
+      syncHUD();
+      playCoin();
+      vibrate([30]);
+      triggerShake(0.1, 0.05);
+    } else {
+      playCrash();
+      vibrate([50, 30, 50]);
+      return;
+    }
+  }
+
+  currentMap = mapId;
+  saveProgress();
+  applyMapToScene();
+  rebuildWorld();
+  renderMapSelector();
+  playClick();
+}
+
+mapBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  playClick();
+  const visible = mapSelector.style.display === 'block';
+  mapSelector.style.display = visible ? 'none' : 'block';
+  if (!visible) renderMapSelector();
+});
+
+// Close map selector when clicking outside
+document.addEventListener('click', (e) => {
+  if (mapSelector.style.display === 'block' &&
+      !mapSelector.contains(e.target) &&
+      e.target !== mapBtn && !mapBtn.contains(e.target)) {
+    mapSelector.style.display = 'none';
+  }
+});
+
+// M key shortcut (desktop only)
+if (!isMobile) {
+  window.addEventListener('keydown', (e) => {
+    if (listeningAction) return;
+    if (settingsModal.style.display === 'block') return;
+    if (e.key.toLowerCase() === 'm' && gameState === 'MENU') {
+      mapBtn.click();
+    }
+  });
+}
+
+renderMapSelector();
+
+// ═══════════════════════════════════════════════════════════════
+//  🔧 DEV CHEAT — REMOVE BEFORE RELEASE
+// ═══════════════════════════════════════════════════════════════
+(() => {
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'KeyC' && e.ctrlKey && e.shiftKey && e.altKey) {
+      e.stopPropagation();
+      coins += 5000;
+      saveProgress();
+      syncHUD();
+      showPickupToast('🔧 +5000 COINS', 0x00e5ff);
+    }
+  }, true);
+})();
+// ═══════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════
 //  GAME LOOP
 // ═══════════════════════════════════════════════════════════════
 const clock = new THREE.Clock();
@@ -1173,4 +1310,4 @@ function animate() {
 animate();
 </script>
 </body>
-          </html>
+</html>
