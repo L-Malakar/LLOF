@@ -11,6 +11,7 @@ import * as THREE from 'https://unpkg.com/three@0.136.0/build/three.module.js';
 const SKIN_ACCENTS = {
   classic: { accent: 0x00ff88, ghost: 0x88ffcc },
   night:   { accent: 0x00e5ff, ghost: 0x7c4dff },
+  beach:   { accent: 0xff6b35, ghost: 0xffbf69 },
 };
 
 export class Player {
@@ -166,6 +167,9 @@ export class Player {
     this.isGhost = active;
     const colors = SKIN_ACCENTS[this._mapSkin] || SKIN_ACCENTS.night;
     if (active) {
+      this.paperMat.transparent = true;
+      this.paperMat.opacity     = 0.75;
+      this.ghostMat.opacity     = 0.35;
       this.engineGlow.color.setHex(colors.ghost);
       this.engineGlow.intensity = 1.2;
     } else {
