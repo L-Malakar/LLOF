@@ -1,0 +1,504 @@
+/* ═══════════════════════════════════════════════════════════════
+   banner.css — Event Banner Overlay
+   Edit the :root variables below to restyle any future event.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Event theme tokens (edit these per event) ──────────────── */
+:root {
+  --banner-accent-1:   #ff6b00;   /* primary gradient start      */
+  --banner-accent-2:   #ff0080;   /* primary gradient end        */
+  --banner-accent-3:   #ffcc00;   /* highlight / star color      */
+  --banner-accent-4:   #00cfff;   /* secondary accent / glow     */
+  --banner-bg-overlay: rgba(0, 0, 0, 0.78); /* backdrop dim      */
+  --banner-card-bg:    #0d0d1a;   /* card dark background        */
+  --banner-radius:     20px;
+  --banner-font-title: 'Arial Black', 'Impact', sans-serif;
+  --banner-font-body:  'Arial', sans-serif;
+}
+
+/* ── Backdrop ────────────────────────────────────────────────── */
+#event-banner-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: var(--banner-bg-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+  overflow-y: auto;
+
+  /* entrance animation */
+  animation: bannerBackdropIn 0.4s ease forwards;
+}
+
+#event-banner-overlay.banner-hiding {
+  animation: bannerBackdropOut 0.35s ease forwards;
+}
+
+@keyframes bannerBackdropIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes bannerBackdropOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+/* ── Card wrapper (16:9 enforced) ───────────────────────────── */
+#event-banner-card {
+  position: relative;
+  width: min(860px, 100%);
+  /* 16:9 using padding trick — relaxed below on small/short screens */
+  aspect-ratio: 16 / 9;
+  max-height: calc(100vh - 32px);
+  background: var(--banner-card-bg);
+  border-radius: var(--banner-radius);
+  overflow: hidden;
+  box-shadow:
+    0 0 0 2px rgba(255,107,0,0.5),
+    0 0 40px rgba(255,107,0,0.25),
+    0 0 80px rgba(255,0,128,0.15),
+    0 30px 60px rgba(0,0,0,0.6);
+
+  animation: bannerCardIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
+}
+
+/* On narrow or short viewports, ditch the strict 16:9 lock so content
+   isn't squished or clipped — let it size to its content instead */
+@media (max-width: 600px), (max-height: 600px) {
+  #event-banner-card {
+    aspect-ratio: auto;
+    height: auto;
+  }
+}
+
+@keyframes bannerCardIn {
+  from { transform: scale(0.82) translateY(30px); opacity: 0; }
+  to   { transform: scale(1)    translateY(0);    opacity: 1; }
+}
+
+#event-banner-overlay.banner-hiding #event-banner-card {
+  animation: bannerCardOut 0.3s ease forwards;
+}
+
+@keyframes bannerCardOut {
+  from { transform: scale(1)    translateY(0);    opacity: 1; }
+  to   { transform: scale(0.9)  translateY(-20px); opacity: 0; }
+}
+
+/* ── Animated gradient background inside card ───────────────── */
+#banner-bg-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    #1a0035 0%,
+    #0d0d1a 30%,
+    #001a35 60%,
+    #1a000d 100%
+  );
+  z-index: 0;
+}
+
+/* Animated colour wash */
+#banner-bg-gradient::after {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    rgba(255,107,0,0.08) 15%,
+    rgba(255,0,128,0.10) 30%,
+    transparent 45%,
+    rgba(0,207,255,0.07) 60%,
+    rgba(255,204,0,0.06) 75%,
+    transparent 90%
+  );
+  animation: bannerSpin 12s linear infinite;
+}
+
+@keyframes bannerSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Particle stars ──────────────────────────────────────────── */
+#banner-particles {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.banner-star {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #fff;
+  animation: starTwinkle var(--dur, 2s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+  opacity: 0;
+}
+
+@keyframes starTwinkle {
+  0%, 100% { opacity: 0;   transform: scale(0.5); }
+  50%       { opacity: 0.9; transform: scale(1.4); }
+}
+
+/* ── Decorative diagonal stripe ─────────────────────────────── */
+#banner-stripe {
+  position: absolute;
+  top: -60px;
+  right: -40px;
+  width: 340px;
+  height: 340px;
+  background: linear-gradient(135deg, var(--banner-accent-1), var(--banner-accent-2));
+  opacity: 0.12;
+  border-radius: 60px;
+  transform: rotate(30deg);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* ── Close button ────────────────────────────────────────────── */
+#banner-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 100;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  max-width: 36px;
+  max-height: 36px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 60, 60, 0.85);
+  background: rgba(200, 20, 20, 0.75);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 36px;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  transition: background 0.2s, border-color 0.2s, transform 0.18s, box-shadow 0.2s;
+  box-shadow: 0 0 10px rgba(255, 0, 0, 0.5), 0 2px 6px rgba(0,0,0,0.5);
+}
+
+#banner-close-btn:hover {
+  background: rgba(255, 20, 20, 0.95);
+  border-color: #ff4444;
+  transform: scale(1.15) rotate(90deg);
+  box-shadow: 0 0 18px rgba(255, 0, 0, 0.75), 0 2px 8px rgba(0,0,0,0.6);
+}
+
+#banner-close-btn svg {
+  width: 14px;
+  height: 14px;
+  stroke: #ffffff;
+  stroke-width: 3;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 2px rgba(255,255,255,0.6));
+}
+
+/* ── Content layout ──────────────────────────────────────────── */
+#banner-content {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(6px, 2%, 18px);
+  padding: clamp(14px, 4%, 40px);
+  box-sizing: border-box;
+  text-align: center;
+}
+
+/* ── Event label pill ────────────────────────────────────────── */
+#banner-event-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: linear-gradient(90deg, var(--banner-accent-1), var(--banner-accent-2));
+  color: #fff;
+  font-family: var(--banner-font-title);
+  font-size: clamp(9px, 1.3vw, 13px);
+  font-weight: 900;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  padding: 5px 16px;
+  border-radius: 999px;
+  box-shadow: 0 0 18px rgba(255,107,0,0.5);
+  animation: pillPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s both;
+}
+
+@keyframes pillPop {
+  from { transform: scale(0.5); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+.banner-label-icon {
+  font-size: 1.2em;
+  animation: iconWiggle 2s ease-in-out infinite;
+}
+
+@keyframes iconWiggle {
+  0%, 100% { transform: rotate(-10deg); }
+  50%       { transform: rotate(10deg);  }
+}
+
+/* ── Main title ──────────────────────────────────────────────── */
+#banner-title {
+  font-family: var(--banner-font-title);
+  font-size: clamp(22px, 5.5vw, 58px);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: clamp(2px, 0.5vw, 6px);
+  line-height: 1.05;
+  background: linear-gradient(
+    90deg,
+    var(--banner-accent-3) 0%,
+    #fff 35%,
+    var(--banner-accent-3) 65%,
+    #fff 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation:
+    titleSlideUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.25s both,
+    titleShimmer 3s linear 1s infinite;
+  text-shadow: none;
+  filter: drop-shadow(0 0 18px rgba(255,204,0,0.45));
+}
+
+@keyframes titleSlideUp {
+  from { transform: translateY(22px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes titleShimmer {
+  to { background-position: 200% center; }
+}
+
+/* ── Subtitle ────────────────────────────────────────────────── */
+#banner-subtitle {
+  font-family: var(--banner-font-body);
+  font-size: clamp(10px, 1.6vw, 17px);
+  color: rgba(255,255,255,0.75);
+  letter-spacing: clamp(1px, 0.3vw, 3px);
+  text-transform: uppercase;
+  animation: titleSlideUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.35s both;
+}
+
+/* ── Deals row ───────────────────────────────────────────────── */
+#banner-deals {
+  display: flex;
+  gap: clamp(8px, 2vw, 20px);
+  flex-wrap: wrap;
+  justify-content: center;
+  animation: titleSlideUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.45s both;
+}
+
+.banner-deal-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: rgba(255,255,255,0.06);
+  border: 1.5px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  padding: clamp(6px, 1.5vw, 14px) clamp(10px, 2vw, 22px);
+  backdrop-filter: blur(6px);
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  cursor: default;
+}
+
+.banner-deal-chip:hover {
+  transform: translateY(-3px) scale(1.04);
+  border-color: var(--banner-accent-3);
+  box-shadow: 0 0 16px rgba(255,204,0,0.25);
+}
+
+.chip-icon {
+  font-size: clamp(16px, 3vw, 28px);
+}
+
+.chip-discount {
+  font-family: var(--banner-font-title);
+  font-size: clamp(14px, 2.8vw, 28px);
+  font-weight: 900;
+  background: linear-gradient(90deg, var(--banner-accent-1), var(--banner-accent-2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+}
+
+.chip-label {
+  font-family: var(--banner-font-body);
+  font-size: clamp(7px, 1.1vw, 11px);
+  color: rgba(255,255,255,0.6);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+/* ── Divider ─────────────────────────────────────────────────── */
+#banner-divider {
+  width: clamp(60px, 15%, 120px);
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--banner-accent-4), transparent);
+  animation: titleSlideUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.5s both;
+}
+
+/* ── CTA button ──────────────────────────────────────────────── */
+#banner-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(90deg, var(--banner-accent-1), var(--banner-accent-2));
+  color: #fff;
+  font-family: var(--banner-font-title);
+  font-size: clamp(10px, 1.5vw, 15px);
+  font-weight: 900;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  border: none;
+  border-radius: 999px;
+  padding: clamp(8px, 1.5vw, 13px) clamp(20px, 4vw, 40px);
+  cursor: pointer;
+  box-shadow: 0 0 24px rgba(255,107,0,0.45), 0 4px 16px rgba(0,0,0,0.4);
+  transition: transform 0.18s, box-shadow 0.18s;
+  animation:
+    pillPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.6s both,
+    ctaPulse 2.5s ease-in-out 1.5s infinite;
+  position: relative;
+  overflow: hidden;
+}
+
+#banner-cta-btn::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  animation: ctaSheen 3s ease-in-out 2s infinite;
+}
+
+@keyframes ctaSheen {
+  0%   { left: -100%; }
+  40%  { left: 120%;  }
+  100% { left: 120%;  }
+}
+
+@keyframes ctaPulse {
+  0%, 100% { box-shadow: 0 0 24px rgba(255,107,0,0.45), 0 4px 16px rgba(0,0,0,0.4); }
+  50%       { box-shadow: 0 0 38px rgba(255,107,0,0.75), 0 4px 24px rgba(0,0,0,0.5); }
+}
+
+#banner-cta-btn:hover {
+  transform: scale(1.06);
+  box-shadow: 0 0 44px rgba(255,107,0,0.7), 0 6px 20px rgba(0,0,0,0.5);
+}
+
+/* ── Timer strip ─────────────────────────────────────────────── */
+#banner-timer-strip {
+  display: flex;
+  align-items: center;
+  gap: clamp(5px, 1vw, 10px);
+  font-family: var(--banner-font-body);
+  font-size: clamp(8px, 1.1vw, 12px);
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  animation: titleSlideUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.65s both;
+}
+
+#banner-timer-strip .timer-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--banner-accent-2);
+  box-shadow: 0 0 6px var(--banner-accent-2);
+  animation: timerDotBlink 1s step-end infinite;
+}
+
+@keyframes timerDotBlink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+#banner-countdown {
+  font-family: var(--banner-font-title);
+  font-size: clamp(10px, 1.4vw, 14px);
+  font-weight: 900;
+  color: var(--banner-accent-3);
+  letter-spacing: 1px;
+  min-width: 70px;
+}
+
+/* ── Bottom glow bar ─────────────────────────────────────────── */
+#banner-bottom-glow {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg,
+    var(--banner-accent-1),
+    var(--banner-accent-3),
+    var(--banner-accent-2),
+    var(--banner-accent-4),
+    var(--banner-accent-1)
+  );
+  background-size: 300% 100%;
+  animation: rainbowSlide 3s linear infinite;
+  z-index: 10;
+}
+
+@keyframes rainbowSlide {
+  to { background-position: 300% center; }
+}
+
+/* ── Reduced motion support ──────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  #event-banner-overlay,
+  #event-banner-card,
+  #banner-bg-gradient::after,
+  #banner-title,
+  #banner-cta-btn,
+  #banner-cta-btn::before,
+  .banner-star,
+  .banner-label-icon {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ── Mobile tweak ────────────────────────────────────────────── */
+@media (max-width: 500px) {
+  #banner-deals { gap: 6px; }
+  .banner-deal-chip { padding: 6px 10px; }
+}
+
+/* ── Very short viewports (landscape phones) ──────────────────── */
+@media (max-height: 480px) {
+  #banner-content { gap: clamp(4px, 1.5%, 10px); padding: 10px clamp(14px,4%,40px); }
+  #banner-deals { gap: 5px; }
+  .banner-deal-chip { padding: 4px 8px; }
+}
