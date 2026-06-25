@@ -117,7 +117,16 @@ export const MController = {
 
     window.addEventListener('touchstart', handleTouch, { passive: false });
     window.addEventListener('touchmove',  (e) => { if (this.enabled && this.joystickActive) handleTouch(e); }, { passive: false });
-    window.addEventListener('touchend',   () => {
+    window.addEventListener('touchend', () => {
+      if (this.joystickActive) {
+        this.joystickActive = false;
+        this.input.x = 0;
+        this.input.y = 0;
+        knob.style.transform = 'translate(0px, 0px)';
+        pad.style.opacity = '0.3';
+      }
+    });
+    window.addEventListener('touchcancel', () => {
       this.joystickActive = false;
       this.input.x = 0;
       this.input.y = 0;
@@ -145,12 +154,13 @@ export const MController = {
     const grid = document.createElement('div');
     grid.style.cssText = 'display:grid; grid-template-columns: 56px 56px 56px; grid-template-rows: 56px 56px 56px; gap:4px;';
 
-    const posMap = { up: '1/2', left: '2/1', down: '3/2', right: '2/3' };
+    const posMap = { up: '1 / 2 / 2 / 3', left: '2 / 1 / 3 / 2', down: '3 / 2 / 4 / 3', right: '2 / 3 / 3 / 4' };
 
     dirs.forEach(({ id, label, dir }) => {
-      const btn = document.createElement('div');
+      const btn = document.createElement('button');
       btn.id = id;
       btn.className = 'dpad-btn';
+      btn.setAttribute('data-ui-block', '');
       btn.textContent = label;
       btn.style.gridArea = posMap[dir];
 
@@ -186,6 +196,7 @@ export const MController = {
   // ─────────────────────────────────────────────────────────────
   _startGyro() {
     if (this._gyroListenerAdded) return;
+    this._gyroListenerAdded = true; // Set immediately to prevent re-entry
     const requestGyro = () => {
       if (typeof DeviceOrientationEvent !== 'undefined' &&
           typeof DeviceOrientationEvent.requestPermission === 'function') {
@@ -201,7 +212,6 @@ export const MController = {
   },
 
   _addGyroListener() {
-    this._gyroListenerAdded = true;
     window.addEventListener('deviceorientation', (e) => {
       this._gyroOrientation = e;
     });
