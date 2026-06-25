@@ -19,7 +19,7 @@
  * ═══════════════════════════════════════════════════════════════
  */
 
-import * as THREE from 'https://unpkg.com/three@0.136.0/build/three.module.js';
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.136.0/build/three.module.js';
 
 // ── Power-up definitions ──────────────────────────────────────
 export const POWERUP_DEFS = [
@@ -122,7 +122,7 @@ export class CollectableManager {
         mesh.position.set(mesh.userData.baseX, data.yRel, data.zRel);
         // BUG FIX (original): initial 0/3 was always used; now uses
         // the correct ramp based on distance passed in.
-        const initialVisible = this.isMobile ? 0 : 3;
+        const initialVisible = this.isMobile ? 6 : 12;
         mesh.visible = index < initialVisible;
         group.add(mesh);
         this.items.push(mesh);
@@ -140,7 +140,7 @@ export class CollectableManager {
   // ── Add 0-2 power-ups into an existing group ──────────────
   _spawnPowerUpsIntoGroup(group, distance = 0) {
     // None before 100 m so player learns the controls first
-    const maxPU   = distance < 0 ? 0 : distance < 0 ? 1 : 2;
+    const maxPU   = distance < 100 ? 0 : distance < 500 ? 1 : 2;
     const count   = Math.floor(Math.random() * (maxPU + 1));
     const half    = this.chunkSize / 2;
 
