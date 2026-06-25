@@ -5,7 +5,7 @@
  * ═══════════════════════════════════════════════════════════════
  */
 
-import * as THREE from 'https://unpkg.com/three@0.136.0/build/three.module.js';
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.136.0/build/three.module.js';
 
 // Accent colours per map skin
 const SKIN_ACCENTS = {
