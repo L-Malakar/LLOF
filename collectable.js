@@ -137,41 +137,53 @@ export class CollectableManager {
     return group;
   }
 
-  // ── Add 0-2 power-ups into an existing group ──────────────
+  // ── Add 0-2 power-ups into an existing group, tiled across ──
+  // ── all 7 lane copies so they stay reachable as the world ────
+  // ── shifts sideways under worldShiftX (same approach as coins) ─
   _spawnPowerUpsIntoGroup(group, distance = 0) {
-    // None before 100 m so player learns the controls first
-    const maxPU   = distance < 100 ? 0 : distance < 500 ? 1 : 2;
+    const maxPU   = 2; // always allow power-ups, no distance gate
     const count   = Math.floor(Math.random() * (maxPU + 1));
     const half    = this.chunkSize / 2;
 
+    // Generate relative placement data once per power-up...
+    const placements = [];
     for (let i = 0; i < count; i++) {
       const defIdx = Math.floor(Math.random() * POWERUP_DEFS.length);
-      const def    = POWERUP_DEFS[defIdx];
-      const geo    = makePowerUpGeo(def.shape); // unique geo per instance
-      const mesh   = new THREE.Mesh(geo, this.puMats[defIdx]);
+      placements.push({
+        defIdx,
+        xRel: Math.random() * this.chunkSize - half,
+        zRel: Math.random() * this.chunkSize - half,
+        yRel: Math.random() * 3.5 + 1.2,
+      });
+    }
 
-      const xRel = Math.random() * this.chunkSize - half;
-      const zRel = Math.random() * this.chunkSize - half;
-      const yRel = Math.random() * 3.5 + 1.2;
+    // ...then replicate across every xIdx lane tile, exactly like coins.
+    for (let xIdx = -3; xIdx <= 3; xIdx++) {
+      placements.forEach(data => {
+        const def  = POWERUP_DEFS[data.defIdx];
+        const geo  = makePowerUpGeo(def.shape); // unique geo per instance
+        const mesh = new THREE.Mesh(geo, this.puMats[data.defIdx]);
+        const baseX = xIdx * this.chunkSize + data.xRel;
 
-      mesh.userData = {
-        type:     'powerup',
-        puId:     def.id,
-        puDefIdx: defIdx,
-        baseY:    yRel,
-        baseX:    xRel,   // relative to chunk group
-      };
-      mesh.position.set(xRel, yRel, zRel);
-      mesh.visible = true;
-      group.add(mesh);
-      this.items.push(mesh);
+        mesh.userData = {
+          type:     'powerup',
+          puId:     def.id,
+          puDefIdx: data.defIdx,
+          baseY:    data.yRel,
+          baseX:    baseX,   // relative to chunk group
+        };
+        mesh.position.set(baseX, data.yRel, data.zRel);
+        mesh.visible = true;
+        group.add(mesh);
+        this.items.push(mesh);
+      });
     }
   }
 
   // ─────────────────────────────────────────────────────────────
   //  Per-frame update  (called from main game loop)
   // ─────────────────────────────────────────────────────────────
-  update(speed, worldShiftX, elapsed, distance = 0) {
+  update(speed, worldShiftX, elapsed, distance = 0, playerY = 0) {
     const magnetActive  = this.hasPowerUp('MAGNET');
     const magnetRadius  = 6; // world-space units
     const luckActive    = this.hasPowerUp('LUCK');
@@ -200,9 +212,9 @@ export class CollectableManager {
 
           // MAGNET: pull toward player (world origin is player X=0,Y=playerY,Z=0)
           if (magnetActive) {
-            // Approximate world position of coin
+            // Approximate world position of coin, relative to player
             const wx  = child.position.x + chunk.position.x;
-            const wy  = child.position.y;
+            const wy  = child.position.y - playerY;
             const wz  = child.position.z + chunk.position.z;
             const dist = Math.sqrt(wx * wx + wy * wy + wz * wz);
             if (dist < magnetRadius && dist > 0.4) {
@@ -318,6 +330,9 @@ export class CollectableManager {
   // ─────────────────────────────────────────────────────────────
   dispose() {
     this.chunks.forEach(c => this.scene.remove(c));
+    this.items.forEach(item => {
+      if (item.userData.type === 'powerup') item.geometry.dispose();
+    });
     this.sharedCoinGeo.dispose();
     this.sharedCoinMat.dispose();
     this.puMats.forEach(m => m.dispose());
