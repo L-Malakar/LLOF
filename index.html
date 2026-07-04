@@ -953,29 +953,51 @@ rebootBtn.addEventListener('click', () => {
 // ═══════════════════════════════════════════════════════════════
 const powerupHud = document.getElementById('powerup-hud');
 
+const _puPillEls = {}; // id -> { pill, bar, time } — persisted across frames
+
 function clearPowerUpHUD() {
   if (powerupHud) powerupHud.innerHTML = '';
+  for (const k in _puPillEls) delete _puPillEls[k];
 }
 
 function renderPowerUpHUD() {
   if (!powerupHud) return;
-  powerupHud.innerHTML = '';
+  const activeIds = new Set(collectables.activePowerUps.map(p => p.id));
+
+  // Remove pills whose power-up is no longer active
+  for (const id in _puPillEls) {
+    if (!activeIds.has(id)) {
+      _puPillEls[id].pill.remove();
+      delete _puPillEls[id];
+    }
+  }
+
   collectables.activePowerUps.forEach(({ id, timeLeft }) => {
     const def = POWERUP_DEFS.find(d => d.id === id);
     if (!def) return;
-    const pct  = Math.max(0, timeLeft / def.duration) * 100;
-    const hex  = '#' + def.color.toString(16).padStart(6, '0');
+    const pct = Math.max(0, timeLeft / def.duration) * 100;
+    const hex = '#' + def.color.toString(16).padStart(6, '0');
 
-    const pill = document.createElement('div');
-    pill.className = 'pu-pill';
-    pill.innerHTML = `
-      <span class="pu-label">${def.label}</span>
-      <div class="pu-bar-wrap">
-        <div class="pu-bar" style="width:${pct.toFixed(1)}%;background:${hex};box-shadow:0 0 6px ${hex};"></div>
-      </div>
-      <span class="pu-time">${timeLeft.toFixed(1)}s</span>
-    `;
-    powerupHud.appendChild(pill);
+    let entry = _puPillEls[id];
+    if (!entry) {
+      const pill = document.createElement('div');
+      pill.className = 'pu-pill';
+      pill.innerHTML = `
+        <span class="pu-label">${def.label}</span>
+        <div class="pu-bar-wrap">
+          <div class="pu-bar" style="background:${hex};box-shadow:0 0 6px ${hex};"></div>
+        </div>
+        <span class="pu-time"></span>
+      `;
+      powerupHud.appendChild(pill);
+      entry = _puPillEls[id] = {
+        pill,
+        bar:  pill.querySelector('.pu-bar'),
+        time: pill.querySelector('.pu-time'),
+      };
+    }
+    entry.bar.style.width  = pct.toFixed(1) + '%';
+    entry.time.textContent = timeLeft.toFixed(1) + 's';
   });
 }
 
@@ -1129,6 +1151,35 @@ function handlePowerUpExpiry(expiredIds) {
       player.group.scale.set(1, 1, 1);
     }
   });
+}
+
+// ── Blink warning in the final second before a visual power-up expires ──
+const GHOST_PU_IDS = ['SHIELD', 'GHOST_TRAIL', 'TURBO_FLIP'];
+
+function updatePowerUpBlink(t) {
+  const blinkOn = Math.floor(t * 8) % 2 === 0; // ~4 on/off cycles per second
+
+  // SHIELD / GHOST_TRAIL / TURBO_FLIP: blink between normal plane and ghost model
+  const activeGhostIds = GHOST_PU_IDS.filter(id => collectables.hasPowerUp(id));
+  if (activeGhostIds.length === 1) {
+    const timeLeft = collectables.getTimeLeft(activeGhostIds[0]);
+    if (timeLeft > 0 && timeLeft <= 1) {
+      player.setGhost(blinkOn);
+    } else {
+      player.setGhost(true);
+    }
+  }
+
+  // TINY: blink between shrunk and normal scale
+  const tinyLeft = collectables.getTimeLeft('TINY');
+  if (tinyLeft > 0) {
+    if (tinyLeft <= 1) {
+      const s = blinkOn ? 0.5 : 1.0;
+      player.group.scale.set(s, s, s);
+    } else {
+      player.group.scale.set(0.5, 0.5, 0.5);
+    }
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1304,6 +1355,7 @@ function animate() {
   if (gameState === 'PLAYING') {
     const expired = collectables.tickPowerUps(delta);
     if (expired.length) handlePowerUpExpiry(expired);
+    updatePowerUpBlink(t);
     renderPowerUpHUD();
   }
 
@@ -1316,7 +1368,7 @@ function animate() {
   // Always scroll world (even in countdown so it feels alive)
   world.distance = score;
   world.update(effectiveSpeed, worldShiftX, t);
-  collectables.update(effectiveSpeed, worldShiftX, t, score);
+  collectables.update(effectiveSpeed, worldShiftX, t, score, player.group.position.y);
 
   // ─── MENU ────────────────────────────────────────────────────
   if (gameState === 'MENU') {
