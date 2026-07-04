@@ -165,40 +165,71 @@ export class WorldManager {
       this.stars = null;
     }
 
-    // ── Cloud layer (beach only) ───────────────────────────────
+    // ── Cloud layer (one InstancedMesh = one draw call) ─────────
     if (this.skin.hasClouds) {
-      const cloudCount = this.isMobile ? 12 : 24;
-      this.clouds = [];
+      const puffsPerCloud = 4; // fixed, so total instance count is predictable
+      const cloudCount    = this.isMobile ? 12 : 24;
+      const totalCopies   = 5; // tile offsets: -2,-1,0,1,2 (matches cloudTile below)
+      const instanceCount = cloudCount * puffsPerCloud * totalCopies;
+
+      const puffGeo = new THREE.SphereGeometry(1, 7, 5); // unit sphere, scaled per-instance
+      const puffMat = new THREE.MeshStandardMaterial({
+        color: 0xfff5e4, transparent: true, opacity: 0.6,
+        roughness: 1, metalness: 0,
+      });
+
+      this.cloudMesh = new THREE.InstancedMesh(puffGeo, puffMat, instanceCount);
+      this.cloudMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+
+      // Per-cloud (not per-puff) data needed for animation each frame.
+      this.cloudData = [];
+      const dummy = new THREE.Object3D();
+      const cloudTileWidth = 80;
+      let instanceIdx = 0;
+
       for (let i = 0; i < cloudCount; i++) {
-        const puffs = 3 + Math.floor(Math.random() * 3);
-        const cloudGroup = new THREE.Group();
-        for (let p = 0; p < puffs; p++) {
-          const r   = 0.8 + Math.random() * 1.2;
-          const geo = new THREE.SphereGeometry(r, 7, 5);
-          const mat = new THREE.MeshStandardMaterial({
-            color: 0xfff5e4, transparent: true,
-            opacity: 0.55 + Math.random() * 0.25,
-            roughness: 1, metalness: 0,
+        const baseX  = (Math.random() - 0.5) * cloudTileWidth;
+        const y      = 18 + Math.random() * 10;
+        const z      = -20 - Math.random() * 120;
+        const speed  = 0.008 + Math.random() * 0.012;
+
+        // Puff layout relative to this cloud's own center (generated once,
+        // reused identically across all 5 tile copies of this cloud).
+        const puffLayout = [];
+        for (let p = 0; p < puffsPerCloud; p++) {
+          const r = 0.8 + Math.random() * 1.2;
+          puffLayout.push({
+            r,
+            ox: (Math.random() - 0.5) * r * 2.5,
+            oy: (Math.random() - 0.5) * r * 0.5,
+            oz: (Math.random() - 0.5) * r,
           });
-          const puff = new THREE.Mesh(geo, mat);
-          puff.position.set(
-            (Math.random() - 0.5) * r * 2.5,
-            (Math.random() - 0.5) * r * 0.5,
-            (Math.random() - 0.5) * r
-          );
-          cloudGroup.add(puff);
         }
-        cloudGroup.position.set(
-          (Math.random() - 0.5) * 80,
-          6 + Math.random() * 6,
-          -20 - Math.random() * 120
-        );
-        cloudGroup.userData.speed = 0.008 + Math.random() * 0.012;
-        this.scene.add(cloudGroup);
-        this.clouds.push(cloudGroup);
+
+        const copyInstanceIndices = [];
+        [-2, -1, 0, 1, 2].forEach(xIdx => {
+          const copyBaseX = baseX + xIdx * cloudTileWidth;
+          puffLayout.forEach(puff => {
+            dummy.position.set(copyBaseX + puff.ox, y + puff.oy, z + puff.oz);
+            dummy.scale.setScalar(puff.r);
+            dummy.updateMatrix();
+            this.cloudMesh.setMatrixAt(instanceIdx, dummy.matrix);
+            copyInstanceIndices.push(instanceIdx);
+            instanceIdx++;
+          });
+        });
+
+        this.cloudData.push({
+          baseX, y, z, speed, puffLayout,
+          instanceIndices: copyInstanceIndices, // 5 copies × puffsPerCloud entries
+        });
       }
+
+      this.cloudMesh.instanceMatrix.needsUpdate = true;
+      this.scene.add(this.cloudMesh);
     } else {
-      this.clouds = null;
+      this.cloudMesh = null;
+      this.cloudData = null;
     }
 
     // Seed initial chunks ahead of the camera
@@ -302,26 +333,25 @@ export class WorldManager {
       this.scene.remove(this.sea);
       this.sea = null;
     }
-    // Animate sun rays
     if (this.sunGroup) {
-      const s = elapsed * 0.08;
-      this._sunRayMeshes.forEach((ray, i) => {
-        ray.material.opacity = 0.06 + Math.abs(Math.sin(s + i * 0.55)) * 0.09;
+      this.sunGroup.children.forEach(c => {
+        if (c.geometry) c.geometry.dispose();
+        if (c.material) c.material.dispose();
       });
-      // Gentle pulse on core
-      const pulse = 1 + Math.sin(elapsed * 1.2) * 0.04;
-      this.sunCore.scale.setScalar(pulse);
+      this.scene.remove(this.sunGroup);
+      this.sunGroup = null;
+    }
+    if (this.sunLight) {
+      this.scene.remove(this.sunLight);
+      this.sunLight = null;
     }
 
-    if (this.clouds) {
-      this.clouds.forEach(cg => {
-        cg.children.forEach(p => {
-          if (p.geometry) p.geometry.dispose();
-          if (p.material) p.material.dispose();
-        });
-        this.scene.remove(cg);
-      });
-      this.clouds = null;
+    if (this.cloudMesh) {
+      this.cloudMesh.geometry.dispose();
+      this.cloudMesh.material.dispose();
+      this.scene.remove(this.cloudMesh);
+      this.cloudMesh = null;
+      this.cloudData = null;
     }
   }
 
@@ -446,26 +476,41 @@ export class WorldManager {
       this.stars.position.x  = worldShiftX * 0.3;
     }
     if (this.sunGroup) {
-      this.sunGroup.children.forEach(c => {
-        if (c.geometry) c.geometry.dispose();
-        if (c.material) c.material.dispose();
+      const s = elapsed * 0.08;
+      this._sunRayMeshes.forEach((ray, i) => {
+        ray.material.opacity = 0.06 + Math.abs(Math.sin(s + i * 0.55)) * 0.09;
       });
-      this.scene.remove(this.sunGroup);
-      this.sunGroup = null;
-    }
-    if (this.sunLight) {
-      this.scene.remove(this.sunLight);
-      this.sunLight = null;
+      const pulse = 1 + Math.sin(elapsed * 1.2) * 0.04;
+      this.sunCore.scale.setScalar(pulse);
     }
 
-    if (this.clouds) {
-      this.clouds.forEach(cg => {
-        cg.position.x -= cg.userData.speed * sm;
-        // Wrap clouds horizontally
-        if (cg.position.x < -50) cg.position.x = 50;
-        // Gentle bob
-        cg.position.y += Math.sin(elapsed * 0.4 + cg.userData.speed * 100) * 0.002;
+    if (this.cloudMesh) {
+      const cloudTile = 80;
+      const dummy = new THREE.Object3D();
+      this.cloudData.forEach(cloud => {
+        cloud.baseX -= cloud.speed * sm;
+        if (cloud.baseX < -cloudTile * 3) cloud.baseX += cloudTile * 5;
+        if (cloud.baseX >  cloudTile * 3) cloud.baseX -= cloudTile * 5;
+
+        const shiftedX = cloud.baseX + worldShiftX * 0.4;
+        const bobY     = cloud.y + Math.sin(elapsed * 0.4 + cloud.speed * 100) * 0.3;
+
+        let i = 0;
+        [-2, -1, 0, 1, 2].forEach(xIdx => {
+          cloud.puffLayout.forEach(puff => {
+            dummy.position.set(
+              shiftedX + xIdx * cloudTile + puff.ox,
+              bobY + puff.oy,
+              cloud.z + puff.oz
+            );
+            dummy.scale.setScalar(puff.r);
+            dummy.updateMatrix();
+            this.cloudMesh.setMatrixAt(cloud.instanceIndices[i], dummy.matrix);
+            i++;
+          });
+        });
       });
+      this.cloudMesh.instanceMatrix.needsUpdate = true;
     }
 
     this.chunks.forEach(chunk => {
