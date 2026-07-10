@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- *  PAPER PLANE · INFINITE PROTOCOL — Stylesheet
+ *  LLOF · INFINITE PROTOCOL — Stylesheet
  *  Theme: Clean, Modern, Sci-Fi Futuristic
  *  Author: L.Malakar (refactored & upgraded)
  * ═══════════════════════════════════════════════════════════════
@@ -140,7 +140,7 @@ body::after {
 }
 
 .game-title::after {
-  content: 'PAPER PLANE';
+  content: 'LLOF';
   position: absolute;
   inset: 0;
   color: transparent;
