@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- *  player.js — Paper Plane Player
+ *  player.js — LLOF
  *  Manages geometry, hitbox, ghost mode, crash animation, map skin
  * ═══════════════════════════════════════════════════════════════
  */
