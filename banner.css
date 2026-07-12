@@ -20,7 +20,7 @@
 #event-banner-overlay {
   position: fixed;
   inset: 0;
-  z-index: 9999;
+  z-index: 9990;
   background: var(--banner-bg-overlay);
   display: flex;
   align-items: center;
