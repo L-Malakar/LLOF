@@ -11,10 +11,10 @@ const DEFAULT_BINDS = {
   down:     's',
   left:     'a',
   right:    'd',
-  pause:    'Escape',
+  pause:    'q',
   restart:  'r',
   home:     'h',
-  settings: 'o',
+  settings: 'e',
 };
 
 /**
@@ -90,13 +90,20 @@ export const Controller = {
   getDefaultBinds() { return { ...DEFAULT_BINDS }; },
 
   // ── Per-frame update ─────────────────────────────────────────
+  _currentSpeedX: 0,
+
   update(playerGroup, currentWorldShiftX, delta) {
     const scale = delta * 60; // Normalise to 60 fps
     let nextX = currentWorldShiftX;
 
-    // Horizontal
-    if (this.keys.left)  nextX += this.config.moveSpeed * scale;
-    if (this.keys.right) nextX -= this.config.moveSpeed * scale;
+    // Horizontal — ease toward target speed instead of snapping to it,
+    // so steering in/out of a turn feels smooth instead of jumpy.
+    const targetSpeedX = this.keys.left ? this.config.moveSpeed
+                        : this.keys.right ? -this.config.moveSpeed
+                        : 0;
+    const easing = 1 - Math.pow(0.001, delta); // frame-rate independent ease
+    this._currentSpeedX += (targetSpeedX - this._currentSpeedX) * easing;
+    nextX += this._currentSpeedX * scale;
 
     // World wrapping
     if (nextX >  this.config.chunkSize) nextX -= this.config.chunkSize;
