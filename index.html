@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>LLOF · INFINITE PROTOCOL</title>
+  <title>LLOF · Terminal Loop</title>
   <link rel="icon" type="image/svg+xml" href="logo.svg?v=2">
   <meta name="theme-color" content="#0a0a0a">
-  <meta property="og:title" content="LLOF · INFINITE PROTOCOL">
+  <meta property="og:title" content="LLOF · Terminal Loop">
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary">
 
@@ -84,6 +84,7 @@
   <meta http-equiv="Permissions-Policy" content="keyboard-map=*">
   <meta name="referrer" content="no-referrer">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="world.css">
   <link rel="stylesheet" href="banner.css">
 </head>
 <body>
@@ -152,7 +153,7 @@
       <span>HOME</span><span class="key-badge" id="kb-badge-home">H</span>
     </button>
     <button id="resume-btn">
-      <span>RESUME</span><span class="key-badge">ESC</span>
+      <span>RESUME</span><span class="key-badge">Q</span>
     </button>
     <button id="pause-settings-btn">
       <span>SETTINGS</span><span class="key-badge" id="kb-badge-settings">O</span>
@@ -168,6 +169,17 @@
   <div style="display:flex; gap:10px; justify-content:center;">
     <button id="leave-confirm-yes">YES, LEAVE</button>
     <button id="leave-confirm-no">CANCEL</button>
+  </div>
+</div>
+
+<!-- ═══ MAP PURCHASE CONFIRM MODAL ═══════════════════════════════ -->
+<div id="map-confirm-backdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1001;"></div>
+<div id="map-confirm-modal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:1002; background:#1a1a1a; border:1px solid #444; border-radius:10px; padding:24px; text-align:center; min-width:260px;">
+  <div style="font-size:18px; font-weight:700; margin-bottom:10px;" id="map-confirm-title">CONFIRM</div>
+  <div style="font-size:13px; opacity:0.75; margin-bottom:18px;" id="map-confirm-desc"></div>
+  <div style="display:flex; gap:10px; justify-content:center;">
+    <button id="map-confirm-no">NO</button>
+    <button id="map-confirm-yes">YES</button>
   </div>
 </div>
 
@@ -220,19 +232,19 @@
         <div class="ctrl-opt-dot"></div>
         <div class="ctrl-opt-info">
           <div class="ctrl-opt-name">VIRTUAL JOYSTICK</div>
-          <div class="ctrl-opt-desc">Tap and drag anywhere bottom-left</div>
+          <div class="ctrl-opt-desc">Tap and drag anywhere</div>
         </div>
       </button>
       <button class="ctrl-opt" data-mode="dpad">
         <div class="ctrl-opt-dot"></div>
         <div class="ctrl-opt-info">
           <div class="ctrl-opt-name">D-PAD BUTTONS</div>
-          <div class="ctrl-opt-desc">On-screen directional buttons</div>
+          <div class="ctrl-opt-desc">On-screen directional</div>
         </div>
       </button>
     </div>
     <p style="font-family:var(--font-mono); font-size:0.62rem; color:var(--clr-muted); margin-top:14px; letter-spacing:1px;">
-      Changes apply on next session start
+      Choose your preferred controller.
     </p>
   </div>
 </div>
@@ -292,7 +304,7 @@
 <div id="ui-layer">
   <div id="header-container">
     <h1 class="game-title">LLOF</h1>
-    <div class="game-subtitle">∞ INFINITE PROTOCOL</div>
+    <div class="game-subtitle">∞ Terminal Loop</div>
   </div>
 
   <div class="menu-card" id="menu">
@@ -378,6 +390,7 @@ const isMobile = (
   navigator.maxTouchPoints > 1
 ) && window.innerWidth <= 1024;
 const activeController = isMobile ? MController : Controller;
+if (isMobile) document.body.classList.add('is-mobile');
 
 // ═══════════════════════════════════════════════════════════════
 //  THREE.JS SETUP
@@ -655,13 +668,29 @@ if (!isMobile) {
       `[ ${safe(b.up)} / ${safe(b.left)} / ${safe(b.down)} / ${safe(b.right)} ] — NAVIGATE`;
   }
 
+  const defaultBinds = { ...Controller.binds };
+
+  function updateResetBtnState() {
+    const btn = document.getElementById('resetBindsBtn');
+    const isDefault = KB_ACTIONS
+      .filter(Boolean)
+      .every(entry => Controller.binds[entry.action] === defaultBinds[entry.action]);
+    btn.disabled = isDefault;
+    btn.classList.toggle('btn-disabled', isDefault);
+  }
+
   renderKeybinds();
+  updateResetBtnState();
 
   document.getElementById('resetBindsBtn').addEventListener('click', () => {
-    Controller.resetBinds();
-    listeningAction = null;
-    renderKeybinds();
-    playClick();
+    if (document.getElementById('resetBindsBtn').disabled) return;
+    openConfirm('RESET KEYBINDS?', 'This will restore all keybinds to default.', () => {
+      Controller.resetBinds();
+      listeningAction = null;
+      renderKeybinds();
+      updateResetBtnState();
+      playClick();
+    });
   });
 
   // Listen for remap key
@@ -672,6 +701,7 @@ if (!isMobile) {
     Controller.rebind(listeningAction, key);
     listeningAction = null;
     renderKeybinds();
+    updateResetBtnState();
   });
 
   // Global hotkeys when modal/pause closed
@@ -913,7 +943,7 @@ playBtn.addEventListener('click', () => {
   setTimeout(() => { menuUI.style.display = 'none'; menuStats.style.display = 'none'; }, 600);
   hud.style.display = 'block';
   sessionCoins = 0;
-  if (isMobile) MController.init(), MController.showControls();
+  if (isMobile) MController.init();
   activeController.init();
 });
 
@@ -941,8 +971,6 @@ function goHome() {
   diffLabel.style.display   = 'none';
   ghostIndicator.style.display = 'none';
   pauseBtn.src = 'https://cdn-icons-png.flaticon.com/512/151/151859.png';
-
-  if (isMobile) MController.reset();
 
   rebuildWorld();
   clearPowerUpHUD();
@@ -1009,7 +1037,6 @@ rebootBtn.addEventListener('click', () => {
   diffLabel.style.display  = 'none';
   syncHUD();
 
-  if (isMobile) MController.showControls();
   activeController.init();
 
   gameState = 'COUNTDOWN';
@@ -1262,6 +1289,17 @@ function updatePowerUpBlink(t) {
 // ═══════════════════════════════════════════════════════════════
 //  MAP SELECTOR
 // ═══════════════════════════════════════════════════════════════
+const mapConfirmBackdrop = document.getElementById('map-confirm-backdrop');
+const mapConfirmModal    = document.getElementById('map-confirm-modal');
+
+bindTouchAndClick(document.getElementById('map-confirm-yes'), () => {
+  if (!pendingConfirmAction) return;
+  const action = pendingConfirmAction;
+  closeConfirm();
+  action();
+});
+bindTouchAndClick(document.getElementById('map-confirm-no'), closeConfirm);
+
 const mapBtn      = document.getElementById('mapBtn');
 const mapSelector = document.getElementById('map-selector');
 const mapOpts     = document.getElementById('map-options');
@@ -1338,21 +1376,52 @@ function selectMap(mapId) {
     const effectivePrice = (phase === 'active' && cfg.price > 0)
       ? Math.floor(cfg.price * 0.5)
       : cfg.price;
-    if (coins >= effectivePrice) {
-      coins -= effectivePrice;
-      ownedMaps.push(mapId);
-      saveProgress();
-      syncHUD();
-      playCoin();
-      vibrate([30]);
-      triggerShake(0.1, 0.05);
-    } else {
+
+    if (coins < effectivePrice) {
       playCrash();
       vibrate([50, 30, 50]);
+      showPickupToast('⬡ NOT ENOUGH COINS', 0xff2255);
       return;
     }
+
+    openMapConfirm(mapId, effectivePrice);
+    return;
   }
 
+  finalizeMapSelect(mapId);
+}
+
+let pendingConfirmAction = null;
+
+function openConfirm(title, desc, onYes) {
+  document.getElementById('map-confirm-title').textContent = title;
+  document.getElementById('map-confirm-desc').textContent  = desc;
+  mapConfirmBackdrop.style.display = 'block';
+  mapConfirmModal.style.display    = 'block';
+  pendingConfirmAction = onYes;
+}
+
+function closeConfirm() {
+  mapConfirmBackdrop.style.display = 'none';
+  mapConfirmModal.style.display    = 'none';
+  pendingConfirmAction = null;
+}
+
+function openMapConfirm(mapId, effectivePrice) {
+  const cfg = SKIN_CONFIGS[mapId];
+  openConfirm('BUY MAP SKIN?', `Buy "${cfg.label}" for ${effectivePrice} coins?`, () => {
+    coins -= effectivePrice;
+    ownedMaps.push(mapId);
+    saveProgress();
+    syncHUD();
+    playCoin();
+    vibrate([30]);
+    triggerShake(0.1, 0.05);
+    finalizeMapSelect(mapId);
+  });
+}
+
+function finalizeMapSelect(mapId) {
   currentMap = mapId;
   saveProgress();
   applyMapToScene();
@@ -1418,8 +1487,26 @@ renderMapSelector();
 // ═══════════════════════════════════════════════════════════════
 const clock = new THREE.Clock();
 
+// Single source of truth: mobile controls are visible only while the
+// player actually needs to steer — COUNTDOWN or PLAYING, and not paused.
+// Checked every frame so no individual state-change handler can forget it.
+let _mobileControlsVisible = null;
+function syncMobileControls() {
+  if (!isMobile) return;
+  const shouldShow = (gameState === 'COUNTDOWN' || gameState === 'PLAYING') && !isPaused;
+  if (shouldShow === _mobileControlsVisible) return;
+  _mobileControlsVisible = shouldShow;
+  if (shouldShow) {
+    MController.enabled = true;
+    MController.showControls();
+  } else {
+    MController.disable();
+  }
+}
+
 function animate() {
   requestAnimationFrame(animate);
+  syncMobileControls();
   if (gameState === 'GAMEOVER') return;
 
   const delta = Math.min(clock.getDelta(), 0.05); // cap at 50ms to prevent tunnelling
@@ -1537,7 +1624,6 @@ function animate() {
       gameState = 'CRASHING';
       pauseBtn.style.display   = 'none';
       diffLabel.style.display  = 'none';
-      if (isMobile) MController.disable();
     }
 
   // ─── CRASHING ────────────────────────────────────────────────
