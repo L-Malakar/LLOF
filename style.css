@@ -125,6 +125,11 @@ body::after {
 .corner-deco::before { top: -1px; left: -1px; border-width: 1px 0 0 1px; }
 .corner-deco::after  { bottom: -1px; right: -1px; border-width: 0 1px 1px 0; }
 
+/* ─── HIDE KEYBOARD SHORTCUT BADGES ON MOBILE ───────────────── */
+body.is-mobile .key-badge {
+  display: none;
+}
+
 /* ─── TYPOGRAPHY ────────────────────────────────────────────── */
 .game-title {
   font-family: var(--font-display);
@@ -213,6 +218,13 @@ body::after {
   95% { transform: translateX(-3px) skew(-1deg); clip-path: inset(15% 0 80% 0); }
   96% { transform: translateX(3px) skew(1deg);  clip-path: inset(80% 0 10% 0); }
   97% { transform: none; }
+}
+
+/* ─── DISABLED BUTTON STATE ─────────────────────────────────── */
+.btn-disabled {
+  opacity: 0.4;
+  cursor: not-allowed !important;
+  pointer-events: none;
 }
 
 /* ─── LAYOUT CONTAINERS ─────────────────────────────────────── */
@@ -1378,17 +1390,6 @@ canvas {
   box-shadow: 0 0 16px rgba(0,229,255,0.06);
 }
 
-/* Beach Sunset map card theming */
-.map-card[data-skin="beach"].active {
-  border-color: rgba(244,162,97,0.45);
-  background: rgba(244,162,97,0.08);
-  box-shadow: 0 0 16px rgba(244,162,97,0.1);
-}
-.map-card[data-skin="beach"]:hover {
-  border-color: rgba(244,162,97,0.25);
-  background: rgba(244,162,97,0.05);
-}
-
 .map-card.locked {
   opacity: 0.7;
 }
@@ -1490,7 +1491,6 @@ canvas {
 }
 
 @media (max-width: 480px) {
-  #mapBtn .key-badge { display: none; }
   .map-options { gap: 6px; }
   .map-card { padding: 8px 6px; min-width: 70px; }
 }
@@ -1853,8 +1853,7 @@ body.skin-beach #sun-rays {
 
 /* Kill the "clickable" hover glow — both the generic and beach-specific
    hover rules have to be overridden since they're more specific. */
-.map-card.coming-soon-card:hover,
-.map-card[data-skin="beach"].coming-soon-card:hover {
+.map-card.coming-soon-card:hover {
   border-color: rgba(255,255,255,0.05) !important;
   background: rgba(255,255,255,0.02) !important;
   box-shadow: none !important;
@@ -1903,4 +1902,4 @@ body.skin-beach #sun-rays {
 
 @media (max-width: 480px) {
   .map-status-coming-soon { font-size: 0.5rem; letter-spacing: 0.5px; padding: 3px 8px; }
-  }
+             }
