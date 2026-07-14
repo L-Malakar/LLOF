@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- *  player.js — LLOF
+ *  player.js — LLOF Player
  *  Manages geometry, hitbox, ghost mode, crash animation, map skin
  * ═══════════════════════════════════════════════════════════════
  */
@@ -11,7 +11,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.136.0/build/three.m
 const SKIN_ACCENTS = {
   classic: { accent: 0x00ff88, ghost: 0x88ffcc },
   night:   { accent: 0x00e5ff, ghost: 0x7c4dff },
-  beach:   { accent: 0xff6b35, ghost: 0xffbf69 },
+  beach:   { accent: 0x000000, ghost: 0xffbf69 },
 };
 
 export class Player {
@@ -177,6 +177,7 @@ export class Player {
       this.paperMat.opacity     = 1;
       this.ghostMat.opacity     = 0;
       this.ghostMesh.position.set(0, 0, 0);
+      this.mesh.position.set(0, 0, 0);
       this.engineGlow.color.setHex(colors.accent);
       this.engineGlow.intensity = 0.6;
       this.trail.forEach(t => { t.mesh.visible = false; t.mesh.material.opacity = 0; });
@@ -196,7 +197,9 @@ export class Player {
     this._glitchTimer -= 1;
     if (this._glitchTimer <= 0) {
       this._glitchTimer = 3 + Math.floor(Math.random() * 8);
-      this.group.position.x += (Math.random() - 0.5) * 0.06;
+      this.mesh.position.x = (Math.random() - 0.5) * 0.06;
+    } else {
+      this.mesh.position.x = THREE.MathUtils.lerp(this.mesh.position.x, 0, 0.2);
     }
   }
 
