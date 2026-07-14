@@ -14,3 +14,7 @@ A web 3D game made with HTML, CSS JS and node JS
 ```
 3. Some small UI improvements
 ```
+---
+<b>Dev:</b> 
+-
+<table><tr><td><img src="https://yt3.googleusercontent.com/Khmav_bBMzqoVJE8ubBONlKjNkwFLI07w7RfosBBB4jD9R6eQjJoZO-nnRAwfPbnNFRc_Zjx=s160-c-k-c0x00ffffff-no-rj" width="24" height="24" style="border-radius:50%; display:block;" /></td><td><a href="https://www.youtube.com/@gdmalakar">L. Malakar</a>.</td></tr></table>
