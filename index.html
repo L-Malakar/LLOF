@@ -191,7 +191,7 @@
 
   <!-- Tabs -->
   <div class="settings-tabs">
-    <button class="tab-btn active" data-tab="audio">AUDIO</button>
+    <button class="tab-btn active" data-tab="audio">AUDIO & FUNCTIONS</button>
     <button class="tab-btn" data-tab="keybinds">KEYBINDS</button>
     <button class="tab-btn" data-tab="mobile">MOBILE</button>
   </div>
@@ -207,6 +207,13 @@
       <span class="setting-label">SFX</span>
       <img id="sfxBtn" class="icon-btn" src="" alt="Mute SFX" style="width:28px;flex-shrink:0;">
       <input type="range" id="sfxSlider" min="0" max="1" step="0.01" value="1">
+    </div>
+    <div class="setting-row">
+      <span class="setting-label">SMOOTH CAMERA MOVEMENT</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="smoothCameraToggle" checked>
+        <span class="toggle-slider"></span>
+      </label>
     </div>
   </div>
 
@@ -340,6 +347,7 @@ import {
   getMusicMuted, getSFXMuted,
 } from './music-handler.js';
 import { initBanner, getEventPhase } from './banner.js';
+import { CameraRig, initCameraUI }  from './camera.js';
 
 // ── Extra SFX: power-up pickup (synthesised inline) ─────────
 function playPowerUp() {
@@ -407,6 +415,14 @@ window.addEventListener('resize', () => {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
+
+// ═══════════════════════════════════════════════════════════════
+//  CAMERA RIG — multiple selectable angles (button + 'R' key)
+// ═══════════════════════════════════════════════════════════════
+const cameraRig = new CameraRig();
+initCameraUI(cameraRig, () =>
+  (gameState === 'COUNTDOWN' || gameState === 'PLAYING' || gameState === 'CRASHING')
+);
 
 // Lighting
 const hemiLight = new THREE.HemisphereLight(0xffffff, 0x000000, 0.5);
@@ -602,6 +618,18 @@ sfxBtn.addEventListener( 'click', () => { toggleSFX();  if (!getSFXMuted()) play
 musicSlider.addEventListener('input', e => { setMusicVolume(+e.target.value); updateAudioIcons(); });
 sfxSlider.addEventListener(  'input', e => { setSFXVolume(  +e.target.value); updateAudioIcons(); });
 
+// ── Smooth camera movement toggle ───────────────────────────────
+const smoothCameraToggle = document.getElementById('smoothCameraToggle');
+const _savedSmoothCam = localStorage.getItem('paperPlane_smoothCamera');
+const _smoothCamOn = _savedSmoothCam === null ? true : _savedSmoothCam === 'true';
+smoothCameraToggle.checked = _smoothCamOn;
+cameraRig.setSmoothing(_smoothCamOn);
+smoothCameraToggle.addEventListener('change', e => {
+  cameraRig.setSmoothing(e.target.checked);
+  localStorage.setItem('paperPlane_smoothCamera', e.target.checked);
+  playClick();
+});
+
 // ═══════════════════════════════════════════════════════════════
 //  KEYBINDS
 // ═══════════════════════════════════════════════════════════════
@@ -616,6 +644,8 @@ if (!isMobile) {
     { action: 'restart',  label: 'RETRY'       },
     { action: 'home',     label: 'HOME'        },
     { action: 'settings', label: 'SETTINGS'    },
+    null, // divider
+    { action: 'camera',   label: 'CAMERA'      },
   ];
 
   let listeningAction = null;
@@ -728,6 +758,10 @@ if (!isMobile) {
     }
     if (k === Controller.binds.settings) {
       openSettings(); return;
+    }
+    if (k === Controller.binds.camera &&
+        (gameState === 'COUNTDOWN' || gameState === 'PLAYING' || gameState === 'CRASHING')) {
+      cameraRig.next(); return;
     }
     if (k === 'm' && gameState === 'MENU') {
       mapBtn.click(); return;
@@ -1537,16 +1571,21 @@ function animate() {
   // ─── MENU ────────────────────────────────────────────────────
   if (gameState === 'MENU') {
     camera.position.lerp(new THREE.Vector3(2, 4, 8), 0.05);
-    camera.lookAt(player.group.position);
+    cameraRig.smoothLookAt(camera, player.group.position.x, player.group.position.y, player.group.position.z, delta);
     player.updateMenuAnimation(t);
 
   // ─── TRANSITION ──────────────────────────────────────────────
   } else if (gameState === 'TRANSITION') {
     lerpFactor += 0.015;
     player.group.position.x = THREE.MathUtils.lerp(-5, 0, lerpFactor);
-    camera.position.lerp(new THREE.Vector3(0, 4.5, 5), 0.05);
-    camera.lookAt(player.group.position);
+    const introTarget = cameraRig.getTarget(0, player.group.position.y + 1.5, 5, player.group.position.y);
+    camera.position.lerp(
+      new THREE.Vector3(introTarget.pos.x, introTarget.pos.y, introTarget.pos.z), 0.05
+    );
+    cameraRig.smoothLookAt(camera, introTarget.look.x, introTarget.look.y, introTarget.look.z, delta);
     if (lerpFactor >= 1) {
+      cameraRig.prevIndex = cameraRig.index;
+      cameraRig._t = 1; // already at the target angle — no blend jump
       gameState = 'COUNTDOWN';
       player.setGhost(true);
       activeController.isGhostMode = true;
@@ -1567,8 +1606,7 @@ function animate() {
     worldShiftX  = ctrl.worldShiftX;
     player.updateFlightAnimation(t, ctrl);
     player.updateGlitch(t);
-    camera.position.set(0, player.group.position.y + 1.5, 5);
-    camera.lookAt(0, player.group.position.y, -2);
+    cameraRig.apply(camera, 0, player.group.position.y + 1.5, 5, player.group.position.y, delta);
 
   // ─── PLAYING ─────────────────────────────────────────────────
   } else if (gameState === 'PLAYING') {
@@ -1597,8 +1635,9 @@ function animate() {
       shakeDuration -= delta;
       if (isMobile) vibrate([8]);
     }
-    camera.position.set(camX, camY, 5);
-    camera.lookAt(0, player.group.position.y, -2);
+    player.mesh.visible = cameraRig.mode !== 'Up-close';
+    player.ghostMesh.visible = cameraRig.mode !== 'Up-close' && player.isGhost;
+    cameraRig.apply(camera, camX, camY, 5, player.group.position.y, delta);
 
     checkCoinCollisions();
 
@@ -1636,8 +1675,9 @@ function animate() {
       camY += (Math.random() - 0.5) * shakeIntensity;
       shakeDuration -= delta;
     }
-    camera.position.set(camX, camY, 5);
-    camera.lookAt(0, player.group.position.y, -2);
+    player.mesh.visible = cameraRig.mode !== 'Up-close';
+    player.ghostMesh.visible = cameraRig.mode !== 'Up-close' && player.isGhost;
+    cameraRig.apply(camera, camX, camY, 5, player.group.position.y, delta);
 
     if (player.group.position.y <= 0 && gameOverUI.style.display !== 'block') {
       if (score > highScore) {
