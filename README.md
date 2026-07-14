@@ -1,5 +1,7 @@
 # <img src="https://l-malakar.github.io/LLOF/logo.svg" width="24" align="center" /> LLOF - Terminal Loop
-A web 3D game made with HTML, CSS JS and node JS
+A web 3D game made with `HTML`, `CSS` and `JS`.
+
+![Logo](https://l-malakar.github.io/LLOF/Banner.svg)
 
 **Click Here -->** <a href="https://l-malakar.github.io/LLOF/" target="_blank"><button style="cursor: pointer; font-weight: bold; padding: 6px 12px;">▶ Play Now</button></a>
 
