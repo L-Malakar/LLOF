@@ -15,6 +15,7 @@ const DEFAULT_BINDS = {
   restart:  'r',
   home:     'h',
   settings: 'e',
+  camera:   'r',
 };
 
 /**
@@ -36,7 +37,7 @@ function saveBinds(binds) {
 
 export const Controller = {
   // ── Runtime state ─────────────────────────────────────────────
-  keys: { up: false, down: false, left: false, right: false, pause: false, restart: false, home: false, settings: false },
+  keys: { up: false, down: false, left: false, right: false, pause: false, restart: false, home: false, settings: false, camera: false },
   binds: loadBinds(),
 
   // ── Config ────────────────────────────────────────────────────
@@ -74,6 +75,7 @@ export const Controller = {
     if (k === this.binds.restart)  { this.keys.restart = isPressed; event.preventDefault(); }
     if (k === this.binds.home)     { this.keys.home    = isPressed; event.preventDefault(); }
     if (k === this.binds.settings) { this.keys.settings= isPressed; event.preventDefault(); }
+    if (k === this.binds.camera)   { this.keys.camera  = isPressed; event.preventDefault(); }
   },
 
   // ── Rebind an action (called from Settings UI) ───────────────
