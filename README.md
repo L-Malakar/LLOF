@@ -1,4 +1,4 @@
-# LLOF - Terminal Loop
+# <img src="https://l-malakar.github.io/LLOF/logo.svg" width="24" align="center" /> LLOF - Terminal Loop
 A web 3D game made with HTML, CSS JS and node JS
 
 **Click Here-->**[![Live Website (Not optimize yet)](https://img.shields.io/badge/Live%20site-VLC_Orange)](https://l-malakar.github.io/LLOF/)
