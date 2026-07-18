@@ -7,15 +7,16 @@
 
 // ── Default keybind map ─────────────────────────────────────────
 const DEFAULT_BINDS = {
-  up:       'w',
-  down:     's',
-  left:     'a',
-  right:    'd',
-  pause:    'q',
-  restart:  'r',
-  home:     'h',
-  settings: 'e',
-  camera:   'r',
+  up:         'w',
+  down:       's',
+  left:       'a',
+  right:      'd',
+  pause:      'q',
+  restart:    'r',
+  home:       'h',
+  settings:   'e',
+  camera:     'r',
+  cameraWheel:'Shift',
 };
 
 /**
