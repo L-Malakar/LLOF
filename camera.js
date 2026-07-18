@@ -182,6 +182,178 @@ export class CameraRig {
   }
 }
 
+/**
+ * GTAV-style radial camera-select wheel. Sits on top of the game,
+ * freezes nothing itself (the caller checks `.isOpen` to pause the
+ * game loop) — this class only owns the visuals + pointer tracking
+ * and commits a selection into the CameraRig on close(true).
+ */
+export class CameraWheel {
+  constructor(rig) {
+    this.rig = rig;
+    this.isOpen = false;
+    this._selected = rig.index;
+    this._build();
+  }
+
+  _build() {
+    const wrap = document.createElement('div');
+    wrap.id = 'camera-wheel-overlay';
+
+    const ring = document.createElement('div');
+    ring.id = 'camera-wheel-ring';
+
+    const pointer = document.createElement('div');
+    pointer.id = 'camera-wheel-pointer';
+    ring.appendChild(pointer);
+
+    const hub = document.createElement('div');
+    hub.id = 'camera-wheel-hub';
+    hub.innerHTML = `<span id="camera-wheel-hub-label"></span>`;
+    ring.appendChild(hub);
+
+    const count = this.rig.presets.length;
+    this._nodes = this.rig.presets.map((p, i) => {
+      const node = document.createElement('div');
+      node.className = 'wheel-node';
+      const angle = (360 / count) * i; // 0 index at top, clockwise
+      node.style.setProperty('--angle', `${angle}deg`);
+      node.innerHTML = `<span>${p.name}</span>`;
+      ring.appendChild(node);
+      return node;
+    });
+
+    wrap.appendChild(ring);
+    document.body.appendChild(wrap);
+
+    this._wrap  = wrap;
+    this._ring  = ring;
+    this._pointer   = pointer;
+    this._hubLabel  = hub.querySelector('#camera-wheel-hub-label');
+
+    this._injectStyle();
+  }
+
+  _injectStyle() {
+    if (document.getElementById('camera-wheel-style')) return;
+    const style = document.createElement('style');
+    style.id = 'camera-wheel-style';
+    style.textContent = `
+      #camera-wheel-overlay {
+        position: fixed; inset: 0; z-index: 200;
+        display: none;
+        align-items: center; justify-content: center;
+        background: rgba(0,0,0,0.35);
+        backdrop-filter: blur(2px);
+        -webkit-tap-highlight-color: transparent;
+        touch-action: none;
+      }
+      #camera-wheel-overlay.open { display: flex; }
+      #camera-wheel-ring {
+        position: relative;
+        width: min(70vw, 70vh, 420px);
+        height: min(70vw, 70vh, 420px);
+      }
+      #camera-wheel-hub {
+        position: absolute; top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 30%; height: 30%;
+        border-radius: 50%;
+        background: rgba(10,10,10,0.75);
+        border: 1px solid rgba(255,255,255,0.3);
+        display: flex; align-items: center; justify-content: center;
+        text-align: center; padding: 6px;
+        color: #fff; font: 700 13px/1.2 system-ui, sans-serif;
+        letter-spacing: 0.05em; text-transform: uppercase;
+        pointer-events: none;
+      }
+      #camera-wheel-pointer {
+        position: absolute; top: 50%; left: 50%;
+        width: 50%; height: 2px;
+        background: linear-gradient(90deg, rgba(255,255,255,0.9), rgba(255,255,255,0));
+        transform-origin: 0 50%;
+        transform: rotate(-90deg);
+        pointer-events: none;
+      }
+      .wheel-node {
+        position: absolute; top: 50%; left: 50%;
+        width: 84px; height: 84px; margin: -42px;
+        transform: rotate(var(--angle)) translate(0, -120px) rotate(calc(-1 * var(--angle)));
+        border-radius: 50%;
+        background: rgba(20,20,20,0.6);
+        border: 1px solid rgba(255,255,255,0.2);
+        display: flex; align-items: center; justify-content: center;
+        text-align: center; padding: 4px;
+        color: rgba(255,255,255,0.75);
+        font: 600 11px/1.15 system-ui, sans-serif;
+        letter-spacing: 0.03em; text-transform: uppercase;
+        transition: background 0.12s ease, color 0.12s ease, transform 0.12s ease;
+        pointer-events: none;
+      }
+      .wheel-node.active {
+        background: rgba(255,255,255,0.9);
+        color: #0a0a0a;
+        transform: rotate(var(--angle)) translate(0, -120px) rotate(calc(-1 * var(--angle))) scale(1.12);
+      }
+      @media (max-width: 480px) {
+        .wheel-node { width: 66px; height: 66px; margin: -33px; font-size: 9.5px; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  /** Open the wheel, defaulting the highlighted slice to the current mode. */
+  open() {
+    if (this.isOpen) return;
+    this.isOpen = true;
+    this._selected = this.rig.index;
+    this._wrap.classList.add('open');
+    this._updateVisual();
+  }
+
+  /** @param {boolean} confirm  true = commit the hovered selection to the rig, false = cancel with no change */
+  close(confirm) {
+    if (!this.isOpen) return;
+    this.isOpen = false;
+    this._wrap.classList.remove('open');
+    if (confirm) this.rig.set(this._selected);
+  }
+
+  /** Feed live mouse (desktop) or touch (mobile) coordinates while the wheel is open. */
+  updatePointer(clientX, clientY) {
+    if (!this.isOpen) return;
+    const rect = this._ring.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const dx = clientX - cx;
+    const dy = clientY - cy;
+    if (Math.hypot(dx, dy) < 24) return; // dead zone near the hub: keep last selection
+
+    let deg = Math.atan2(dy, dx) * 180 / Math.PI + 90; // 0deg = top, matches node layout
+    deg = (deg + 360) % 360;
+
+    const count = this.rig.presets.length;
+    const idx = Math.round(deg / (360 / count)) % count;
+    if (idx !== this._selected) {
+      this._selected = idx;
+      this._updateVisual();
+    }
+  }
+
+  _updateVisual() {
+    const count = this.rig.presets.length;
+    const angle = (360 / count) * this._selected;
+    // The node-placement angle is measured from a translate-then-rotate
+    // composition whose resting direction is "up". The pointer element's
+    // own resting direction (before any transform) is "right" (it's a
+    // plain horizontal bar), so it needs an extra -90deg to line up with
+    // the same node it's pointing at.
+    this._pointer.style.transform = `rotate(${angle - 90}deg)`;
+    this._nodes.forEach((n, i) => n.classList.toggle('active', i === this._selected));
+    this._hubLabel.textContent = this.rig.presets[this._selected].name;
+  }
+}
+
 function lerp(a, b, k) { return a + (b - a) * k; }
 
 CameraRig._STORAGE_KEY = 'cameraRig.modeIndex';
@@ -210,7 +382,7 @@ CameraRig._saveIndex = function (i) {
  *        short interval) to decide whether to show/hide the button.
  *        If omitted, the button is always visible.
  */
-export function initCameraUI(rig, isVisibleFn) {
+export function initCameraUI(rig, isVisibleFn, wheel) {
   const btn = document.createElement('button');
   btn.id = 'camera-toggle-btn';
   btn.type = 'button';
@@ -275,7 +447,49 @@ export function initCameraUI(rig, isVisibleFn) {
 
   rig.onChange(() => flashLabel());
 
-  btn.addEventListener('click', () => rig.next());
+  // Hold-to-open wheel (mobile). A quick tap still just cycles (rig.next()),
+  // same as before — only a sustained press opens the radial select.
+  if (wheel) {
+    const HOLD_MS = 180;
+    let holdTimer  = null;
+    let holdActive = false;
+    let justHeld   = false;
+
+    const clearHold = () => { clearTimeout(holdTimer); holdTimer = null; };
+
+    btn.addEventListener('touchstart', () => {
+      clearHold();
+      holdActive = false;
+      holdTimer = setTimeout(() => {
+        holdActive = true;
+        wheel.open();
+      }, HOLD_MS);
+    }, { passive: true });
+
+    btn.addEventListener('touchmove', (e) => {
+      if (!holdActive) return;
+      const t = e.touches[0];
+      if (t) wheel.updatePointer(t.clientX, t.clientY);
+    }, { passive: true });
+
+    const endTouch = () => {
+      clearHold();
+      if (holdActive) {
+        wheel.close(true);
+        justHeld = true;
+      }
+      holdActive = false;
+    };
+    btn.addEventListener('touchend',    endTouch);
+    btn.addEventListener('touchcancel', endTouch);
+
+    btn.addEventListener('click', () => {
+      if (justHeld) { justHeld = false; return; } // swallow the click that follows a hold-select
+      rig.next();
+    });
+  } else {
+    btn.addEventListener('click', () => rig.next());
+  }
 
   if (isVisibleFn) {
     setInterval(() => {
