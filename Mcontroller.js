@@ -26,13 +26,17 @@ export const MController = {
     gyroSensX:      3.0,   // tilt sensitivity horizontal (gamma)
     gyroSensY:      2.0,   // tilt sensitivity vertical (beta offset)
     gyroDeadzone:   2.0,   // degrees ignored near centre
+    gyroStaleMs:    500,   // treat orientation data older than this as "gone neutral"
   },
 
   // ── Internal refs ────────────────────────────────────────────
   _listenersAdded: false,
-  _gyroListenerAdded: false,
-  _gyroOrientation: null,  // last DeviceOrientationEvent
+  _gyroPermissionRequested: false, // a permission prompt is in flight / already resolved
+  _gyroListenerAdded: false,       // the actual 'deviceorientation' listener is attached
+  _gyroOrientation: null,          // last DeviceOrientationEvent
+  _gyroLastUpdate: 0,              // performance.now() timestamp of that event
   _dpadState: { up: false, down: false, left: false, right: false },
+  _joystickTouchId: null,          // identifier of the finger currently driving the stick
 
   // ── Init ─────────────────────────────────────────────────────
   init() {
@@ -50,8 +54,36 @@ export const MController = {
   },
 
   setMode(mode) {
+    if (mode === this.mode) return;
     this.mode = mode;
     localStorage.setItem('paperPlane_mobileCtrl', mode);
+
+    // Wipe whatever state the previous mode left behind so nothing carries
+    // over into the new one (e.g. a joystick still "active" after switching
+    // to d-pad, silently fighting the d-pad's own input every frame).
+    this._resetInputState();
+
+    // If controls are already on screen (mode changed mid-run via Settings),
+    // swap the visible layer immediately instead of waiting for the next
+    // enable/disable transition to notice.
+    if (this.enabled) this.showControls();
+  },
+
+  _resetInputState() {
+    this.joystickActive  = false;
+    this._joystickTouchId = null;
+    this._dpadState = { up: false, down: false, left: false, right: false };
+    this.input = { x: 0, y: 0 };
+
+    const pad  = document.getElementById('joystick-pad');
+    const knob = document.getElementById('joystick-knob');
+    if (pad)  { pad.style.opacity = '0.3'; pad.style.removeProperty('left'); pad.style.removeProperty('top'); }
+    if (knob) knob.style.transform = 'translate(0px, 0px)';
+
+    ['dpad-up', 'dpad-down', 'dpad-left', 'dpad-right'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) btn.classList.remove('pressed');
+    });
   },
 
   // ─────────────────────────────────────────────────────────────
@@ -80,32 +112,13 @@ export const MController = {
     const pad  = document.getElementById('joystick-pad');
     const knob = document.getElementById('joystick-knob');
 
-    const handleTouch = (e) => {
-      // Bail out FIRST when controls are disabled (e.g. game-over / menu screens).
-      // This must run before any preventDefault() so taps on game-over UI
-      // (buttons, spans, badges) are never swallowed or hijacked by the joystick.
-      if (!this.enabled) return;
-      if (e.target.closest && e.target.closest('button, [data-ui-block]')) return;
-      if (e.target.tagName === 'BUTTON') return;
-      e.preventDefault();
-      const touch = e.touches[0];
-
-      if (!this.joystickActive) {
-        const isBottomHalf = touch.clientY > window.innerHeight * 0.45;
-        const isLeftHalf   = touch.clientX < window.innerWidth  * 0.55;
-        if (!isBottomHalf || !isLeftHalf) return;
-        pad.style.left    = `${touch.clientX - 55}px`;
-        pad.style.top     = `${touch.clientY - 55}px`;
-        pad.style.opacity = '1';
-        this.joystickActive = true;
-      }
-
+    const applyTouch = (touch) => {
       const rect    = pad.getBoundingClientRect();
       const centerX = rect.left + rect.width  / 2;
       const centerY = rect.top  + rect.height / 2;
       let dx = touch.clientX - centerX;
       let dy = touch.clientY - centerY;
-      const dist   = Math.sqrt(dx * dx + dy * dy);
+      const dist   = Math.hypot(dx, dy);
       const radius = rect.width / 2;
 
       if (dist > radius) { dx *= radius / dist; dy *= radius / dist; }
@@ -115,24 +128,68 @@ export const MController = {
       this.input.y = dy / radius;
     };
 
-    window.addEventListener('touchstart', handleTouch, { passive: false });
-    window.addEventListener('touchmove',  (e) => { if (this.enabled && this.joystickActive) handleTouch(e); }, { passive: false });
-    window.addEventListener('touchend', () => {
-      if (this.joystickActive) {
-        this.joystickActive = false;
-        this.input.x = 0;
-        this.input.y = 0;
-        knob.style.transform = 'translate(0px, 0px)';
-        pad.style.opacity = '0.3';
-      }
-    });
-    window.addEventListener('touchcancel', () => {
-      this.joystickActive = false;
+    const releaseStick = () => {
+      this.joystickActive   = false;
+      this._joystickTouchId = null;
       this.input.x = 0;
       this.input.y = 0;
       knob.style.transform = 'translate(0px, 0px)';
       pad.style.opacity = '0.3';
-    });
+    };
+
+    const onTouchStart = (e) => {
+      // Bail out FIRST when controls are disabled/wrong-mode (e.g. game-over
+      // screens, or another input mode is active). This must run before any
+      // preventDefault() so taps on game-over UI (buttons, spans, badges)
+      // are never swallowed or hijacked, and so a stray touch can't drive
+      // the joystick's math while the d-pad or gyro is actually in charge.
+      if (!this.enabled || this.mode !== 'joystick') return;
+      if (this.joystickActive) return; // already tracking a finger, ignore extra ones
+      if (e.target.closest && e.target.closest('button, [data-ui-block]')) return;
+      if (e.target.tagName === 'BUTTON') return;
+
+      const touch = e.changedTouches[0];
+      const isBottomHalf = touch.clientY > window.innerHeight * 0.45;
+      const isLeftHalf   = touch.clientX < window.innerWidth  * 0.55;
+      if (!isBottomHalf || !isLeftHalf) return;
+
+      e.preventDefault();
+      this._joystickTouchId = touch.identifier;
+      pad.style.left    = `${touch.clientX - 55}px`;
+      pad.style.top     = `${touch.clientY - 55}px`;
+      pad.style.opacity = '1';
+      this.joystickActive = true;
+      applyTouch(touch);
+    };
+
+    const onTouchMove = (e) => {
+      if (!this.enabled || this.mode !== 'joystick' || !this.joystickActive) return;
+      // Only follow the specific finger that started the drag — otherwise
+      // a second, unrelated finger touching anywhere on screen can hijack
+      // the stick's position mid-flight.
+      let touch = null;
+      for (let i = 0; i < e.touches.length; i++) {
+        if (e.touches[i].identifier === this._joystickTouchId) { touch = e.touches[i]; break; }
+      }
+      if (!touch) return;
+      e.preventDefault();
+      applyTouch(touch);
+    };
+
+    const onTouchEnd = (e) => {
+      if (!this.joystickActive) return;
+      // Only release when the finger that actually lifted/cancelled is the
+      // one steering — an unrelated touch ending elsewhere shouldn't zero
+      // out input mid-drag.
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === this._joystickTouchId) { releaseStick(); return; }
+      }
+    };
+
+    window.addEventListener('touchstart',  onTouchStart, { passive: false });
+    window.addEventListener('touchmove',   onTouchMove,  { passive: false });
+    window.addEventListener('touchend',    onTouchEnd);
+    window.addEventListener('touchcancel', onTouchEnd);
   },
 
   // ─────────────────────────────────────────────────────────────
@@ -164,8 +221,21 @@ export const MController = {
       btn.textContent = label;
       btn.style.gridArea = posMap[dir];
 
-      const press   = (e) => { e.preventDefault(); this._dpadState[dir] = true;  btn.classList.add('pressed');    this._updateDpadInput(); };
-      const release = (e) => { e.preventDefault(); this._dpadState[dir] = false; btn.classList.remove('pressed'); this._updateDpadInput(); };
+      const press = (e) => {
+        if (!this.enabled || this.mode !== 'dpad') return;
+        e.preventDefault();
+        this._dpadState[dir] = true;
+        btn.classList.add('pressed');
+        this._updateDpadInput();
+      };
+      // Release always runs (no enabled/mode guard) so a button pressed
+      // right before a disable/mode-switch can never get stuck "down".
+      const release = (e) => {
+        e.preventDefault();
+        this._dpadState[dir] = false;
+        btn.classList.remove('pressed');
+        this._updateDpadInput();
+      };
 
       btn.addEventListener('touchstart', press,   { passive: false });
       btn.addEventListener('touchend',   release, { passive: false });
@@ -195,14 +265,24 @@ export const MController = {
   //  GYROSCOPE
   // ─────────────────────────────────────────────────────────────
   _startGyro() {
-    if (this._gyroListenerAdded) return;
-    this._gyroListenerAdded = true; // Set immediately to prevent re-entry
+    if (this._gyroPermissionRequested) return;
+    this._gyroPermissionRequested = true;
+
     const requestGyro = () => {
       if (typeof DeviceOrientationEvent !== 'undefined' &&
           typeof DeviceOrientationEvent.requestPermission === 'function') {
         DeviceOrientationEvent.requestPermission()
-          .then(state => { if (state === 'granted') this._addGyroListener(); })
-          .catch(console.warn);
+          .then(state => {
+            if (state === 'granted') {
+              this._addGyroListener();
+            } else {
+              // Denied — allow a future retry instead of gyro being
+              // permanently dead for the rest of the session (e.g. if the
+              // player switches away and back to gyro mode later).
+              this._gyroPermissionRequested = false;
+            }
+          })
+          .catch(() => { this._gyroPermissionRequested = false; });
       } else {
         this._addGyroListener();
       }
@@ -212,14 +292,26 @@ export const MController = {
   },
 
   _addGyroListener() {
+    if (this._gyroListenerAdded) return;
+    this._gyroListenerAdded = true;
     window.addEventListener('deviceorientation', (e) => {
       this._gyroOrientation = e;
+      this._gyroLastUpdate  = performance.now();
     });
   },
 
   _updateGyroInput() {
     const e = this._gyroOrientation;
-    if (!e) return;
+    const isStale = !e || (performance.now() - this._gyroLastUpdate) > this.config.gyroStaleMs;
+    if (isStale) {
+      // No data yet, or the sensor's gone quiet (permission revoked mid-run,
+      // screen backgrounded, etc.) — settle to neutral instead of freezing
+      // the plane at whatever tilt it last saw.
+      this.input.x = 0;
+      this.input.y = 0;
+      return;
+    }
+
     const dz = this.config.gyroDeadzone;
 
     // gamma = left/right tilt (-90…90). beta = front/back tilt (-180…180)
@@ -238,40 +330,28 @@ export const MController = {
   // ─────────────────────────────────────────────────────────────
   disable() {
     this.enabled = false;
-    this.joystickActive = false;
-    this.input = { x: 0, y: 0 };
 
-    const joyContainer = document.getElementById('joystick-container');
+    const joyContainer  = document.getElementById('joystick-container');
     const dpadContainer = document.getElementById('dpad-container');
-    const pad  = document.getElementById('joystick-pad');
-    const knob = document.getElementById('joystick-knob');
 
     if (joyContainer)  joyContainer.style.display  = 'none';
     if (dpadContainer) dpadContainer.style.display = 'none';
 
-    // Fully reset joystick visuals so nothing is left mid-drag when it's
-    // shown again (e.g. on restart) — otherwise the knob/pad can reappear
-    // already offset/opaque from the moment the game ended.
-    if (pad)  pad.style.opacity = '0.3';
-    if (knob) knob.style.transform = 'translate(0px, 0px)';
-
-    // Clear d-pad button "pressed" visuals too.
-    this._dpadState = { up: false, down: false, left: false, right: false };
-    ['dpad-up', 'dpad-down', 'dpad-left', 'dpad-right'].forEach(id => {
-      const btn = document.getElementById(id);
-      if (btn) btn.classList.remove('pressed');
-    });
+    // Fully reset visuals + state so nothing is left mid-drag when it's
+    // shown again (e.g. on restart) — otherwise the knob/pad/d-pad can
+    // reappear already offset/opaque/pressed from the moment the game ended.
+    this._resetInputState();
   },
 
   reset() {
-    this.enabled        = true;
-    this.isGhostMode    = false;
-    this.joystickActive = false;
-    this.input          = { x: 0, y: 0 };
-    this._dpadState     = { up: false, down: false, left: false, right: false };
+    this.enabled     = true;
+    this.isGhostMode = false;
+    this._resetInputState();
   },
 
   // ── Per-frame update ─────────────────────────────────────────
+  _currentSpeedX: 0,
+
   update(playerGroup, currentWorldShiftX, delta) {
     if (!this.enabled) return { worldShiftX: currentWorldShiftX, isGroundHit: false, isCrashed: false, targetBank: 0, targetPitch: 0 };
 
@@ -280,14 +360,23 @@ export const MController = {
 
     const scale = delta * 60;
     let nextX   = currentWorldShiftX;
-    nextX -= this.input.x * this.config.moveSpeed * scale;
+
+    // Ease toward target speed (joystick/dpad/gyro input is analog already,
+    // but this smooths abrupt dpad on/off and gyro jitter too)
+    const targetSpeedX = -this.input.x * this.config.moveSpeed;
+    const easing = 1 - Math.pow(0.001, delta);
+    this._currentSpeedX += (targetSpeedX - this._currentSpeedX) * easing;
+    nextX += this._currentSpeedX * scale;
 
     if (nextX >  this.config.chunkSize) nextX -= this.config.chunkSize;
     if (nextX < -this.config.chunkSize) nextX += this.config.chunkSize;
 
     const vMove = -this.input.y * this.config.verticalSpeed * scale;
-    if (vMove > 0 && playerGroup.position.y < this.config.maxHeight) playerGroup.position.y += vMove;
-    else if (vMove < 0) playerGroup.position.y += vMove;
+    if (vMove > 0) {
+      playerGroup.position.y = Math.min(playerGroup.position.y + vMove, this.config.maxHeight);
+    } else if (vMove < 0) {
+      playerGroup.position.y += vMove;
+    }
 
     const floor = this.isGhostMode ? this.config.ghostMinHeight : this.config.minHeight;
     if (playerGroup.position.y < floor) playerGroup.position.y = floor;
