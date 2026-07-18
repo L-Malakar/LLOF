@@ -347,7 +347,7 @@ import {
   getMusicMuted, getSFXMuted,
 } from './music-handler.js';
 import { initBanner, getEventPhase } from './banner.js';
-import { CameraRig, initCameraUI }  from './camera.js';
+import { CameraRig, initCameraUI, CameraWheel }  from './camera.js';
 
 // ── Extra SFX: power-up pickup (synthesised inline) ─────────
 function playPowerUp() {
@@ -419,9 +419,11 @@ window.addEventListener('resize', () => {
 // ═══════════════════════════════════════════════════════════════
 //  CAMERA RIG — multiple selectable angles (button + 'R' key)
 // ═══════════════════════════════════════════════════════════════
-const cameraRig = new CameraRig();
+const cameraRig   = new CameraRig();
+const cameraWheel = new CameraWheel(cameraRig);
 initCameraUI(cameraRig, () =>
-  (gameState === 'COUNTDOWN' || gameState === 'PLAYING' || gameState === 'CRASHING')
+  (gameState === 'PLAYING' || gameState === 'CRASHING'),
+  cameraWheel
 );
 
 // Lighting
@@ -645,7 +647,8 @@ if (!isMobile) {
     { action: 'home',     label: 'HOME'        },
     { action: 'settings', label: 'SETTINGS'    },
     null, // divider
-    { action: 'camera',   label: 'CAMERA'      },
+    { action: 'camera',      label: 'CAMERA'       },
+    { action: 'cameraWheel', label: 'CAMERA WHEEL' },
   ];
 
   let listeningAction = null;
@@ -737,9 +740,13 @@ if (!isMobile) {
   // Global hotkeys when modal/pause closed
   window.addEventListener('keydown', (e) => {
     if (listeningAction) return;
-    if (settingsModal.style.display === 'block') return;
 
     const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+
+    if (settingsModal.style.display === 'block') {
+      if (k === Controller.binds.settings) closeSettings();
+      return;
+    }
 
     if (k === Controller.binds.pause && gameState === 'PLAYING') {
       togglePause(); return;
@@ -756,7 +763,7 @@ if (!isMobile) {
     if (k === Controller.binds.home && (gameState === 'PLAYING' || isPaused)) {
       openLeaveConfirm(); return;
     }
-    if (k === Controller.binds.settings) {
+    if (k === Controller.binds.settings && gameState !== 'COUNTDOWN') {
       openSettings(); return;
     }
     if (k === Controller.binds.camera &&
@@ -766,6 +773,28 @@ if (!isMobile) {
     if (k === 'm' && gameState === 'MENU') {
       mapBtn.click(); return;
     }
+  });
+
+  // ── Camera wheel (hold TAB) ─────────────────────────────────
+  window.addEventListener('keydown', (e) => {
+    if (listeningAction) return;
+    if (settingsModal.style.display === 'block') return;
+    const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    if (k === Controller.binds.cameraWheel &&
+        (gameState === 'PLAYING' || gameState === 'CRASHING') &&
+        !cameraWheel.isOpen) {
+      e.preventDefault();
+      cameraWheel.open();
+    }
+  });
+  window.addEventListener('keyup', (e) => {
+    const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    if (k === Controller.binds.cameraWheel && cameraWheel.isOpen) {
+      cameraWheel.close(true);
+    }
+  });
+  window.addEventListener('mousemove', (e) => {
+    if (cameraWheel.isOpen) cameraWheel.updatePointer(e.clientX, e.clientY);
   });
 } else {
   // Mobile: hide keybinds tab
@@ -800,9 +829,14 @@ document.querySelectorAll('.ctrl-opt').forEach(btn => {
 //  SETTINGS OPEN / CLOSE
 // ═══════════════════════════════════════════════════════════════
 const settingsBackdrop = document.getElementById('settings-backdrop');
+let settingsPausedGame = false; // true only if openSettings() itself paused a running game
 
 function openSettings() {
   playClick();
+  if (gameState === 'PLAYING' && !isPaused) {
+    isPaused = true;
+    settingsPausedGame = true;
+  }
   settingsModal.style.display = 'block';
   settingsBackdrop.style.display = 'block';
   if (!isMobile) renderKeybinds();
@@ -811,6 +845,10 @@ function closeSettings() {
   playClick();
   settingsModal.style.display = 'none';
   settingsBackdrop.style.display = 'none';
+  if (settingsPausedGame) {
+    isPaused = false;
+    settingsPausedGame = false;
+  }
 }
 
 bindTouchAndClick(settingsBackdrop, closeSettings);
@@ -1544,7 +1582,7 @@ function animate() {
   if (gameState === 'GAMEOVER') return;
 
   const delta = Math.min(clock.getDelta(), 0.05); // cap at 50ms to prevent tunnelling
-  if (isPaused) { renderer.render(scene, camera); return; }
+  if (isPaused || cameraWheel.isOpen) { renderer.render(scene, camera); return; }
 
   gameTime += delta;
   const t = gameTime;
