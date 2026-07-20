@@ -1,8 +1,8 @@
-# [<img src="https://l-malakar.github.io/LLOF/logo.svg" width="35" valign="middle"/>](https://l-malakar.github.io/LLOF) LLOF - Terminal Loop
+# [<img src="https://l-malakar.github.io/LLOF/asset/logo.svg" width="35" valign="middle"/>](https://l-malakar.github.io/LLOF) LLOF - Terminal Loop
 
 - A web 3D game made with `HTML`, `CSS`, and `JS`.
 
-[![LLOF - Terminal Loop Banner](https://l-malakar.github.io/LLOF/Banner.svg)](https://l-malakar.github.io/LLOF/)
+[![LLOF - Terminal Loop Banner](https://l-malakar.github.io/LLOF/asset/Banner.svg)](https://l-malakar.github.io/LLOF/)
 
 ## [▶ Play Now](https://l-malakar.github.io/LLOF/)
 
