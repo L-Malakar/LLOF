@@ -13,7 +13,15 @@
 2. Add dynamic smooth camera movement along with the player movement.
 3. Some small UI improvements.
 
+## Project structure
+```
+LLOF/
+├── index.html               # Games main page
+├── CSS/
+└── JS/
+```
 ---
+
 
 ### Dev
 [<img src="https://yt3.googleusercontent.com/Khmav_bBMzqoVJE8ubBONlKjNkwFLI07w7RfosBBB4jD9R6eQjJoZO-nnRAwfPbnNFRc_Zjx=s160-c-k-c0x00ffffff-no-rj" width="24" valign="middle" alt="L. Malakar Profile" />](https://www.youtube.com/@gdmalakar) &nbsp; [L. Malakar](https://www.youtube.com/@gdmalakar)
