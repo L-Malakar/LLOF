@@ -1,0 +1,106 @@
+<svg width="100%" viewBox="0 0 500 500" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>Lrak Studio icon — 1:1 monogram, matched to the main lockup</title>
+<desc>Square icon/avatar version of the L monogram and power-core gem, using the same extrusion, brushed texture, glow, and background treatment as the full "Lrak" wordmark logo.</desc>
+
+<defs>
+  <linearGradient id="faceGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="#F6F6F6"/><stop offset="100%" stop-color="#CDCDCD"/>
+  </linearGradient>
+  <linearGradient id="sideGradMid" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="#9C9C9C"/><stop offset="100%" stop-color="#6E6E6E"/>
+  </linearGradient>
+  <linearGradient id="sideGradDark" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="#3C3C3C"/><stop offset="100%" stop-color="#202020"/>
+  </linearGradient>
+
+  <!-- same color field used on the full lockup, rescaled to this canvas -->
+  <linearGradient id="unifiedFlow" gradientUnits="userSpaceOnUse" x1="120" y1="10" x2="420" y2="380">
+    <stop offset="0%" stop-color="#8A4CFF"/><stop offset="50%" stop-color="#7A6BFF"/><stop offset="100%" stop-color="#3FF3FF"/>
+  </linearGradient>
+  <linearGradient id="unifiedFlowLit" gradientUnits="userSpaceOnUse" x1="120" y1="10" x2="420" y2="380">
+    <stop offset="0%" stop-color="#C9A8FF"/><stop offset="50%" stop-color="#B7C3FF"/><stop offset="100%" stop-color="#9CFBFF"/>
+  </linearGradient>
+  <linearGradient id="unifiedFlowDark" gradientUnits="userSpaceOnUse" x1="120" y1="10" x2="420" y2="380">
+    <stop offset="0%" stop-color="#3F1D80"/><stop offset="50%" stop-color="#332E7A"/><stop offset="100%" stop-color="#187C8A"/>
+  </linearGradient>
+  <radialGradient id="gemGlow" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#B98CFF" stop-opacity="0.9"/>
+    <stop offset="100%" stop-color="#B98CFF" stop-opacity="0"/>
+  </radialGradient>
+
+  <pattern id="brushed" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(6)">
+    <line x1="0" y1="0" x2="5" y2="0" stroke="#ffffff" stroke-width="0.6" opacity="0.10"/>
+    <line x1="0" y1="2.5" x2="5" y2="2.5" stroke="#000000" stroke-width="0.4" opacity="0.10"/>
+  </pattern>
+
+  <pattern id="carbon" width="14" height="14" patternUnits="userSpaceOnUse">
+    <rect width="14" height="14" fill="#101114"/>
+    <path d="M0 0 L14 14 M14 0 L0 14" stroke="#06070a" stroke-width="2.4"/>
+    <rect width="7" height="7" fill="#0c0d10"/>
+    <rect x="7" y="7" width="7" height="7" fill="#0c0d10"/>
+  </pattern>
+
+  <radialGradient id="vignette" cx="50%" cy="45%" r="75%">
+    <stop offset="0%" stop-color="#000000" stop-opacity="0"/>
+    <stop offset="100%" stop-color="#000000" stop-opacity="0.65"/>
+  </radialGradient>
+  <radialGradient id="ambient" cx="50%" cy="50%" r="65%">
+    <stop offset="0%" stop-color="#000000" stop-opacity="0.55"/><stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+  </radialGradient>
+
+  <filter id="softBlur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5"/></filter>
+  <filter id="wideBlur" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="30"/></filter>
+  <filter id="glow" x="-150%" y="-150%" width="400%" height="400%">
+    <feGaussianBlur stdDeviation="5" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+</defs>
+
+<!-- ============ background, matched treatment, square-tuned ============ -->
+<rect x="0" y="0" width="500" height="500" fill="url(#carbon)"/>
+<ellipse cx="90" cy="70" rx="150" ry="130" fill="#8A4CFF" opacity="0.18" filter="url(#wideBlur)"/>
+<ellipse cx="430" cy="430" rx="170" ry="140" fill="#3FF3FF" opacity="0.15" filter="url(#wideBlur)"/>
+<rect x="0" y="0" width="500" height="500" fill="url(#vignette)"/>
+
+<!-- corner HUD micro-details -->
+<g stroke="#9CFBFF" stroke-width="1.2" opacity="0.35">
+  <path d="M22 22 h9 M26.5 17.5 v9"/>
+  <path d="M478 22 h-9 M473.5 17.5 v9"/>
+  <path d="M22 478 h9 M26.5 473.5 v9"/>
+  <path d="M478 478 h-9 M473.5 473.5 v9"/>
+</g>
+
+<!-- everything below shifted -26 on x to sit centered in the 500x500 frame -->
+<g transform="translate(-26 0)">
+
+  <ellipse cx="270" cy="415" rx="185" ry="24" fill="url(#ambient)" filter="url(#softBlur)"/>
+
+  <!-- ===== L MONOGRAM, silver metal, exact 45° chamfers ===== -->
+  <g>
+    <path d="M160 140 L200 100 L212 112 L172 152 Z" fill="url(#sideGradMid)"/>
+    <path d="M200 100 L240 100 L252 112 L212 112 Z" fill="url(#sideGradMid)"/>
+    <path d="M240 100 L240 300 L252 312 L252 112 Z" fill="url(#sideGradDark)"/>
+    <path d="M340 300 L380 340 L392 352 L352 312 Z" fill="url(#sideGradDark)"/>
+    <path d="M380 340 L340 380 L352 392 L392 352 Z" fill="url(#sideGradDark)"/>
+    <path d="M340 380 L160 380 L172 392 L352 392 Z" fill="url(#sideGradDark)"/>
+    <path d="M160 380 L160 140 L172 152 L172 392 Z" fill="url(#sideGradDark)"/>
+  </g>
+  <path d="M160 140 L200 100 L240 100 L240 300 L340 300 L380 340 L340 380 L160 380 Z" fill="url(#faceGrad)"/>
+  <path d="M160 140 L200 100 L240 100 L240 300 L340 300 L380 340 L340 380 L160 380 Z" fill="url(#brushed)" style="mix-blend-mode:overlay"/>
+  <line x1="200" y1="130" x2="200" y2="360" stroke="url(#unifiedFlow)" stroke-width="3" opacity="0.55" filter="url(#glow)"/>
+
+  <!-- ===== faceted gem / power-core, co-linear with the chamfer line x+y=300 ===== -->
+  <circle cx="250" cy="50" r="46" fill="url(#gemGlow)" filter="url(#wideBlur)"/>
+  <g transform="translate(250 50) rotate(45)">
+    <rect x="-16" y="-10" width="32" height="32" rx="2" fill="url(#unifiedFlowDark)"/>
+    <g>
+      <polygon points="-22,-16 10,-16 -6,0" fill="url(#unifiedFlowLit)"/>
+      <polygon points="10,-16 10,16 -6,0" fill="url(#unifiedFlow)"/>
+      <polygon points="10,16 -22,16 -6,0" fill="url(#unifiedFlowDark)"/>
+      <polygon points="-22,16 -22,-16 -6,0" fill="url(#unifiedFlow)"/>
+    </g>
+    <rect x="-22" y="-16" width="32" height="32" rx="2" fill="none" stroke="#F3EBFF" stroke-width="1" opacity="0.5"/>
+  </g>
+
+</g>
+</svg>
