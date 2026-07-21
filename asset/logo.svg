@@ -1,106 +1,80 @@
-<svg width="100%" viewBox="0 0 500 500" role="img" xmlns="http://www.w3.org/2000/svg">
-<title>Lrak Studio icon — 1:1 monogram, matched to the main lockup</title>
-<desc>Square icon/avatar version of the L monogram and power-core gem, using the same extrusion, brushed texture, glow, and background treatment as the full "Lrak" wordmark logo.</desc>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2a0a3d"/>
+      <stop offset="35%" stop-color="#7c1f6b"/>
+      <stop offset="60%" stop-color="#ff4500"/>
+      <stop offset="100%" stop-color="#ffb347"/>
+    </linearGradient>
+    <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff7d6"/>
+      <stop offset="100%" stop-color="#ff8a1e"/>
+    </linearGradient>
+    <linearGradient id="plane" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#eafcff"/>
+      <stop offset="100%" stop-color="#5ad1ff"/>
+    </linearGradient>
+    <linearGradient id="planeShade" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00c8ff"/>
+      <stop offset="100%" stop-color="#0077aa"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#00ffe0" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#00ffe0" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="round">
+      <rect x="8" y="8" width="496" height="496" rx="96"/>
+    </clipPath>
+  </defs>
 
-<defs>
-  <linearGradient id="faceGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-    <stop offset="0%" stop-color="#F6F6F6"/><stop offset="100%" stop-color="#CDCDCD"/>
-  </linearGradient>
-  <linearGradient id="sideGradMid" x1="0%" y1="0%" x2="100%" y2="100%">
-    <stop offset="0%" stop-color="#9C9C9C"/><stop offset="100%" stop-color="#6E6E6E"/>
-  </linearGradient>
-  <linearGradient id="sideGradDark" x1="0%" y1="0%" x2="100%" y2="100%">
-    <stop offset="0%" stop-color="#3C3C3C"/><stop offset="100%" stop-color="#202020"/>
-  </linearGradient>
+  <g clip-path="url(#round)">
+    <rect x="8" y="8" width="496" height="496" fill="url(#sky)"/>
 
-  <!-- same color field used on the full lockup, rescaled to this canvas -->
-  <linearGradient id="unifiedFlow" gradientUnits="userSpaceOnUse" x1="120" y1="10" x2="420" y2="380">
-    <stop offset="0%" stop-color="#8A4CFF"/><stop offset="50%" stop-color="#7A6BFF"/><stop offset="100%" stop-color="#3FF3FF"/>
-  </linearGradient>
-  <linearGradient id="unifiedFlowLit" gradientUnits="userSpaceOnUse" x1="120" y1="10" x2="420" y2="380">
-    <stop offset="0%" stop-color="#C9A8FF"/><stop offset="50%" stop-color="#B7C3FF"/><stop offset="100%" stop-color="#9CFBFF"/>
-  </linearGradient>
-  <linearGradient id="unifiedFlowDark" gradientUnits="userSpaceOnUse" x1="120" y1="10" x2="420" y2="380">
-    <stop offset="0%" stop-color="#3F1D80"/><stop offset="50%" stop-color="#332E7A"/><stop offset="100%" stop-color="#187C8A"/>
-  </linearGradient>
-  <radialGradient id="gemGlow" cx="50%" cy="50%" r="50%">
-    <stop offset="0%" stop-color="#B98CFF" stop-opacity="0.9"/>
-    <stop offset="100%" stop-color="#B98CFF" stop-opacity="0"/>
-  </radialGradient>
+    <circle cx="256" cy="330" r="120" fill="url(#sun)" opacity="0.95"/>
 
-  <pattern id="brushed" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(6)">
-    <line x1="0" y1="0" x2="5" y2="0" stroke="#ffffff" stroke-width="0.6" opacity="0.10"/>
-    <line x1="0" y1="2.5" x2="5" y2="2.5" stroke="#000000" stroke-width="0.4" opacity="0.10"/>
-  </pattern>
-
-  <pattern id="carbon" width="14" height="14" patternUnits="userSpaceOnUse">
-    <rect width="14" height="14" fill="#101114"/>
-    <path d="M0 0 L14 14 M14 0 L0 14" stroke="#06070a" stroke-width="2.4"/>
-    <rect width="7" height="7" fill="#0c0d10"/>
-    <rect x="7" y="7" width="7" height="7" fill="#0c0d10"/>
-  </pattern>
-
-  <radialGradient id="vignette" cx="50%" cy="45%" r="75%">
-    <stop offset="0%" stop-color="#000000" stop-opacity="0"/>
-    <stop offset="100%" stop-color="#000000" stop-opacity="0.65"/>
-  </radialGradient>
-  <radialGradient id="ambient" cx="50%" cy="50%" r="65%">
-    <stop offset="0%" stop-color="#000000" stop-opacity="0.55"/><stop offset="100%" stop-color="#000000" stop-opacity="0"/>
-  </radialGradient>
-
-  <filter id="softBlur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5"/></filter>
-  <filter id="wideBlur" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="30"/></filter>
-  <filter id="glow" x="-150%" y="-150%" width="400%" height="400%">
-    <feGaussianBlur stdDeviation="5" result="b"/>
-    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-  </filter>
-</defs>
-
-<!-- ============ background, matched treatment, square-tuned ============ -->
-<rect x="0" y="0" width="500" height="500" fill="url(#carbon)"/>
-<ellipse cx="90" cy="70" rx="150" ry="130" fill="#8A4CFF" opacity="0.18" filter="url(#wideBlur)"/>
-<ellipse cx="430" cy="430" rx="170" ry="140" fill="#3FF3FF" opacity="0.15" filter="url(#wideBlur)"/>
-<rect x="0" y="0" width="500" height="500" fill="url(#vignette)"/>
-
-<!-- corner HUD micro-details -->
-<g stroke="#9CFBFF" stroke-width="1.2" opacity="0.35">
-  <path d="M22 22 h9 M26.5 17.5 v9"/>
-  <path d="M478 22 h-9 M473.5 17.5 v9"/>
-  <path d="M22 478 h9 M26.5 473.5 v9"/>
-  <path d="M478 478 h-9 M473.5 473.5 v9"/>
-</g>
-
-<!-- everything below shifted -26 on x to sit centered in the 500x500 frame -->
-<g transform="translate(-26 0)">
-
-  <ellipse cx="270" cy="415" rx="185" ry="24" fill="url(#ambient)" filter="url(#softBlur)"/>
-
-  <!-- ===== L MONOGRAM, silver metal, exact 45° chamfers ===== -->
-  <g>
-    <path d="M160 140 L200 100 L212 112 L172 152 Z" fill="url(#sideGradMid)"/>
-    <path d="M200 100 L240 100 L252 112 L212 112 Z" fill="url(#sideGradMid)"/>
-    <path d="M240 100 L240 300 L252 312 L252 112 Z" fill="url(#sideGradDark)"/>
-    <path d="M340 300 L380 340 L392 352 L352 312 Z" fill="url(#sideGradDark)"/>
-    <path d="M380 340 L340 380 L352 392 L392 352 Z" fill="url(#sideGradDark)"/>
-    <path d="M340 380 L160 380 L172 392 L352 392 Z" fill="url(#sideGradDark)"/>
-    <path d="M160 380 L160 140 L172 152 L172 392 Z" fill="url(#sideGradDark)"/>
-  </g>
-  <path d="M160 140 L200 100 L240 100 L240 300 L340 300 L380 340 L340 380 L160 380 Z" fill="url(#faceGrad)"/>
-  <path d="M160 140 L200 100 L240 100 L240 300 L340 300 L380 340 L340 380 L160 380 Z" fill="url(#brushed)" style="mix-blend-mode:overlay"/>
-  <line x1="200" y1="130" x2="200" y2="360" stroke="url(#unifiedFlow)" stroke-width="3" opacity="0.55" filter="url(#glow)"/>
-
-  <!-- ===== faceted gem / power-core, co-linear with the chamfer line x+y=300 ===== -->
-  <circle cx="250" cy="50" r="46" fill="url(#gemGlow)" filter="url(#wideBlur)"/>
-  <g transform="translate(250 50) rotate(45)">
-    <rect x="-16" y="-10" width="32" height="32" rx="2" fill="url(#unifiedFlowDark)"/>
-    <g>
-      <polygon points="-22,-16 10,-16 -6,0" fill="url(#unifiedFlowLit)"/>
-      <polygon points="10,-16 10,16 -6,0" fill="url(#unifiedFlow)"/>
-      <polygon points="10,16 -22,16 -6,0" fill="url(#unifiedFlowDark)"/>
-      <polygon points="-22,16 -22,-16 -6,0" fill="url(#unifiedFlow)"/>
+    <g stroke="#ff2fb0" stroke-width="2" opacity="0.55">
+      <line x1="8" y1="380" x2="504" y2="380"/>
+      <line x1="8" y1="410" x2="504" y2="410"/>
+      <line x1="8" y1="445" x2="504" y2="445"/>
+      <line x1="8" y1="485" x2="504" y2="485"/>
     </g>
-    <rect x="-22" y="-16" width="32" height="32" rx="2" fill="none" stroke="#F3EBFF" stroke-width="1" opacity="0.5"/>
+    <g stroke="#ff2fb0" stroke-width="2" opacity="0.4">
+      <line x1="60" y1="360" x2="-40" y2="504"/>
+      <line x1="160" y1="360" x2="90" y2="504"/>
+      <line x1="256" y1="360" x2="256" y2="504"/>
+      <line x1="352" y1="360" x2="422" y2="504"/>
+      <line x1="452" y1="360" x2="552" y2="504"/>
+    </g>
+
+    <g transform="translate(105,335) rotate(-13)">
+      <polygon points="-14,-150 14,-150 22,-140 -6,150 -22,142" fill="#ff9d4d"/>
+      <polygon points="14,-150 22,-140 -6,150 6,142" fill="#c94f13"/>
+    </g>
+
+    <g transform="translate(405,300) rotate(11)">
+      <polygon points="-11,-88 11,-88 17,-80 -5,92 -17,86" fill="#9aa3ab"/>
+      <polygon points="11,-88 17,-80 -5,92 5,86" fill="#5c666f"/>
+    </g>
+
+    <g transform="translate(378,420)">
+      <polygon points="0,-24 19,0 0,9 -19,0" fill="#ffce54"/>
+      <polygon points="0,-24 19,0 0,9" fill="#e2a020"/>
+    </g>
+
+    <g transform="translate(150,430)">
+      <circle cx="0" cy="0" r="9" fill="#ffd400"/>
+    </g>
+
+    <g transform="translate(256,256) rotate(-38)">
+      <circle cx="0" cy="0" r="46" fill="url(#glow)"/>
+      <polygon points="0,-46 34,30 0,16 -34,30" fill="url(#plane)"/>
+      <polygon points="0,-46 34,30 0,16" fill="url(#planeShade)"/>
+      <polygon points="0,16 -10,34 0,26 10,34" fill="#0d6f96"/>
+    </g>
+
+    <text x="256" y="150" text-anchor="middle" font-family="Trebuchet MS, Verdana, sans-serif" font-weight="700" font-size="58" letter-spacing="6" fill="#ffffff" opacity="0.95">LLOF</text>
+    <text x="256" y="178" text-anchor="middle" font-family="Trebuchet MS, Verdana, sans-serif" font-weight="400" font-size="15" letter-spacing="5" fill="#00ffe0">TERMINAL LOOP</text>
   </g>
 
-</g>
+  <rect x="8" y="8" width="496" height="496" rx="96" fill="none" stroke="#00ffe0" stroke-width="4" opacity="0.5"/>
 </svg>
