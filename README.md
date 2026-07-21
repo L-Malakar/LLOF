@@ -2,6 +2,8 @@
 
 - A web 3D game made with `HTML`, `CSS`, and `JS`.
 
+### <a href="https://l-malakar.github.io/LLOF/"><img src="https://l-malakar.github.io/LLOF/asset/logo.svg" width="120" height="120" valign="middle"></a> [▶ Play Now](https://l-malakar.github.io/LLOF/)
+
 [![LLOF - Terminal Loop Banner](https://l-malakar.github.io/LLOF/asset/Banner.svg)](https://l-malakar.github.io/LLOF/)
 
 ## [▶ Play Now](https://l-malakar.github.io/LLOF/)
