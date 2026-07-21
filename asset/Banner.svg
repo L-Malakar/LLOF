@@ -1,186 +1,133 @@
-<svg width="100%" viewBox="0 0 1150 500" role="img" xmlns="http://www.w3.org/2000/svg">
-<title>Lrak Studio logo — unified dimensional metal lockup</title>
-<desc>L, r, a, k all built as extruded metal on the same 40-unit grid, brushed texture and glowing conduit lines throughout, faceted gem-core diamond, dark studio-lit metal background.</desc>
+<svg width="1280" height="720" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2a0a3d"/>
+      <stop offset="35%" stop-color="#7c1f6b"/>
+      <stop offset="60%" stop-color="#ff4500"/>
+      <stop offset="100%" stop-color="#ffb347"/>
+    </linearGradient>
+    <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff7d6"/>
+      <stop offset="100%" stop-color="#ff8a1e"/>
+    </linearGradient>
+    <linearGradient id="plane" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#eafcff"/>
+      <stop offset="100%" stop-color="#5ad1ff"/>
+    </linearGradient>
+    <linearGradient id="planeShade" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00c8ff"/>
+      <stop offset="100%" stop-color="#0077aa"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#00ffe0" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#00ffe0" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
 
-<defs>
-  <!-- neutral metal (used on the L) -->
-  <linearGradient id="faceGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-    <stop offset="0%" stop-color="#F6F6F6"/><stop offset="100%" stop-color="#CDCDCD"/>
-  </linearGradient>
-  <linearGradient id="sideGradMid" x1="0%" y1="0%" x2="100%" y2="100%">
-    <stop offset="0%" stop-color="#9C9C9C"/><stop offset="100%" stop-color="#6E6E6E"/>
-  </linearGradient>
-  <linearGradient id="sideGradDark" x1="0%" y1="0%" x2="100%" y2="100%">
-    <stop offset="0%" stop-color="#3C3C3C"/><stop offset="100%" stop-color="#202020"/>
-  </linearGradient>
+  <rect width="1280" height="720" fill="url(#sky)"/>
 
-  <!-- ONE color field in absolute canvas space — diamond through the end
-       of "k" — every colored facet below reads from this same gradient,
-       so the whole wordmark + gem behaves like one lit metal object. -->
-  <linearGradient id="unifiedFlow" gradientUnits="userSpaceOnUse" x1="250" y1="10" x2="1080" y2="380">
-    <stop offset="0%" stop-color="#8A4CFF"/><stop offset="50%" stop-color="#7A6BFF"/><stop offset="100%" stop-color="#3FF3FF"/>
-  </linearGradient>
-  <linearGradient id="unifiedFlowLit" gradientUnits="userSpaceOnUse" x1="250" y1="10" x2="1080" y2="380">
-    <stop offset="0%" stop-color="#C9A8FF"/><stop offset="50%" stop-color="#B7C3FF"/><stop offset="100%" stop-color="#9CFBFF"/>
-  </linearGradient>
-  <linearGradient id="unifiedFlowDark" gradientUnits="userSpaceOnUse" x1="250" y1="10" x2="1080" y2="380">
-    <stop offset="0%" stop-color="#3F1D80"/><stop offset="50%" stop-color="#332E7A"/><stop offset="100%" stop-color="#187C8A"/>
-  </linearGradient>
-  <radialGradient id="gemGlow" cx="50%" cy="50%" r="50%">
-    <stop offset="0%" stop-color="#B98CFF" stop-opacity="0.9"/>
-    <stop offset="100%" stop-color="#B98CFF" stop-opacity="0"/>
-  </radialGradient>
-
-  <!-- brushed-metal micro texture, laid over every metal face -->
-  <pattern id="brushed" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(6)">
-    <line x1="0" y1="0" x2="5" y2="0" stroke="#ffffff" stroke-width="0.6" opacity="0.10"/>
-    <line x1="0" y1="2.5" x2="5" y2="2.5" stroke="#000000" stroke-width="0.4" opacity="0.10"/>
-  </pattern>
-
-  <!-- carbon-fiber weave background -->
-  <pattern id="carbon" width="14" height="14" patternUnits="userSpaceOnUse">
-    <rect width="14" height="14" fill="#101114"/>
-    <path d="M0 0 L14 14 M14 0 L0 14" stroke="#06070a" stroke-width="2.4"/>
-    <rect width="7" height="7" fill="#0c0d10"/>
-    <rect x="7" y="7" width="7" height="7" fill="#0c0d10"/>
-  </pattern>
-
-  <radialGradient id="vignette" cx="50%" cy="45%" r="75%">
-    <stop offset="0%" stop-color="#000000" stop-opacity="0"/>
-    <stop offset="100%" stop-color="#000000" stop-opacity="0.65"/>
-  </radialGradient>
-  <radialGradient id="ambient" cx="50%" cy="50%" r="65%">
-    <stop offset="0%" stop-color="#000000" stop-opacity="0.55"/><stop offset="100%" stop-color="#000000" stop-opacity="0"/>
-  </radialGradient>
-
-  <filter id="softBlur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter>
-  <filter id="wideBlur" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="40"/></filter>
-  <filter id="glow" x="-150%" y="-150%" width="400%" height="400%">
-    <feGaussianBlur stdDeviation="6" result="b"/>
-    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-  </filter>
-</defs>
-
-<!-- ============ DRAMATIC STUDIO BACKGROUND ============ -->
-<rect x="0" y="0" width="1150" height="500" fill="url(#carbon)"/>
-<ellipse cx="150" cy="60" rx="260" ry="200" fill="#8A4CFF" opacity="0.16" filter="url(#wideBlur)"/>
-<ellipse cx="1020" cy="440" rx="300" ry="200" fill="#3FF3FF" opacity="0.14" filter="url(#wideBlur)"/>
-<rect x="0" y="0" width="1150" height="500" fill="url(#vignette)"/>
-<ellipse cx="270" cy="415" rx="190" ry="24" fill="url(#ambient)" filter="url(#softBlur)"/>
-
-<!-- tiny HUD micro-details -->
-<g stroke="#9CFBFF" stroke-width="1.2" opacity="0.35">
-  <path d="M40 40 h10 M45 35 v10"/>
-  <path d="M1110 40 h-10 M1105 35 v10"/>
-  <path d="M40 460 h10 M45 455 v10"/>
-  <path d="M1110 460 h-10 M1105 455 v10"/>
-</g>
-<circle cx="1085" cy="60" r="2" fill="#3FF3FF" opacity="0.6"/>
-<circle cx="1070" cy="60" r="1.3" fill="#3FF3FF" opacity="0.4"/>
-
-<!-- ============================================================
-     L MONOGRAM — silver metal, exact 45° chamfers, brushed texture
-     ============================================================ -->
-<g>
-  <path d="M160 140 L200 100 L212 112 L172 152 Z" fill="url(#sideGradMid)"/>
-  <path d="M200 100 L240 100 L252 112 L212 112 Z" fill="url(#sideGradMid)"/>
-  <path d="M240 100 L240 300 L252 312 L252 112 Z" fill="url(#sideGradDark)"/>
-  <path d="M340 300 L380 340 L392 352 L352 312 Z" fill="url(#sideGradDark)"/>
-  <path d="M380 340 L340 380 L352 392 L392 352 Z" fill="url(#sideGradDark)"/>
-  <path d="M340 380 L160 380 L172 392 L352 392 Z" fill="url(#sideGradDark)"/>
-  <path d="M160 380 L160 140 L172 152 L172 392 Z" fill="url(#sideGradDark)"/>
-</g>
-<path d="M160 140 L200 100 L240 100 L240 300 L340 300 L380 340 L340 380 L160 380 Z" fill="url(#faceGrad)"/>
-<path d="M160 140 L200 100 L240 100 L240 300 L340 300 L380 340 L340 380 L160 380 Z" fill="url(#brushed)" style="mix-blend-mode:overlay"/>
-<!-- glowing power seam down the spine of the L, echoes the conduit lines in the wordmark -->
-<line x1="200" y1="130" x2="200" y2="360" stroke="url(#unifiedFlow)" stroke-width="3" opacity="0.55" filter="url(#glow)"/>
-
-<!-- ============================================================
-     FACETED GEM / POWER-CORE — replaces the flat floating tile.
-     Center co-linear with the L's chamfer line (x+y=300), same as before,
-     now built as 4 shaded facets around a glowing core.
-     ============================================================ -->
-<circle cx="250" cy="50" r="46" fill="url(#gemGlow)" filter="url(#wideBlur)"/>
-<g transform="translate(250 50) rotate(45)">
-  <!-- side (depth) -->
-  <rect x="-16" y="-10" width="32" height="32" rx="2" fill="url(#unifiedFlowDark)"/>
-  <!-- gem body, split into 4 triangular facets for a cut-gem look -->
-  <g>
-    <polygon points="-22,-16 10,-16 -6,0" fill="url(#unifiedFlowLit)"/>
-    <polygon points="10,-16 10,16 -6,0" fill="url(#unifiedFlow)"/>
-    <polygon points="10,16 -22,16 -6,0" fill="url(#unifiedFlowDark)"/>
-    <polygon points="-22,16 -22,-16 -6,0" fill="url(#unifiedFlow)"/>
+  <g fill="#fff7d6">
+    <circle cx="120" cy="90" r="1.6" opacity="0.8"/>
+    <circle cx="220" cy="60" r="1.2" opacity="0.6"/>
+    <circle cx="340" cy="110" r="1.8" opacity="0.7"/>
+    <circle cx="900" cy="70" r="1.4" opacity="0.7"/>
+    <circle cx="1020" cy="120" r="1.8" opacity="0.6"/>
+    <circle cx="1150" cy="80" r="1.3" opacity="0.7"/>
+    <circle cx="70" cy="180" r="1.3" opacity="0.5"/>
+    <circle cx="1180" cy="200" r="1.5" opacity="0.5"/>
   </g>
-  <rect x="-22" y="-16" width="32" height="32" rx="2" fill="none" stroke="#F3EBFF" stroke-width="1" opacity="0.5"/>
-</g>
 
-<!-- ============================================================
-     "rak" — now extruded to the SAME 12px depth as the L, brushed
-     texture + glowing conduit line through every stem, generously
-     re-spaced (60px gaps instead of the old 20-40px) for breathing room.
-     Baseline still y=380, matching the L's own base exactly.
-     ============================================================ -->
+  <circle cx="640" cy="430" r="180" fill="url(#sun)" opacity="0.95"/>
 
-<!-- r  (start x=440, width 170) -->
-<g transform="translate(440 140)">
-  <g>
-    <path d="M0 0 L40 0 L52 12 L12 12 Z" fill="url(#unifiedFlowLit)"/>
-    <path d="M40 180 L150 180 L162 192 L52 192 Z" fill="url(#unifiedFlowLit)"/>
-    <path d="M0 240 L0 0 L12 12 L12 252 Z" fill="url(#unifiedFlowLit)"/>
-    <path d="M40 0 L40 180 L52 192 L52 12 Z" fill="url(#unifiedFlowDark)"/>
-    <path d="M150 180 L170 200 L182 212 L162 192 Z" fill="url(#unifiedFlowDark)"/>
-    <path d="M170 200 L170 220 L182 232 L182 212 Z" fill="url(#unifiedFlowDark)"/>
-    <path d="M170 220 L40 220 L52 232 L182 232 Z" fill="url(#unifiedFlowDark)"/>
-    <path d="M40 220 L40 240 L52 252 L52 232 Z" fill="url(#unifiedFlowDark)"/>
-    <path d="M40 240 L0 240 L12 252 L52 252 Z" fill="url(#unifiedFlowDark)"/>
+  <g stroke="#ffd9a0" stroke-width="1.5" fill="none" opacity="0.5">
+    <path d="M 60,260 Q 160,230 260,260 Q 340,285 420,260"/>
+    <path d="M 880,240 Q 970,215 1060,240 Q 1140,262 1220,240"/>
   </g>
-  <path d="M0 0 L40 0 L40 180 L150 180 L170 200 L170 220 L40 220 L40 240 L0 240 Z" fill="url(#unifiedFlow)"/>
-  <path d="M0 0 L40 0 L40 180 L150 180 L170 200 L170 220 L40 220 L40 240 L0 240 Z" fill="url(#brushed)" style="mix-blend-mode:overlay"/>
-  <line x1="20" y1="14" x2="20" y2="226" stroke="#EAF9FF" stroke-width="2.5" opacity="0.6" filter="url(#glow)"/>
-</g>
 
-<!-- a  (start x=670, width 180) -->
-<g transform="translate(670 140)">
-  <g>
-    <path d="M20 0 L160 0 L172 12 L32 12 Z" fill="url(#unifiedFlowLit)"/>
-    <path d="M0 240 L0 20 L12 32 L12 252 Z" fill="url(#unifiedFlowLit)"/>
-    <path d="M0 20 L20 0 L32 12 L12 32 Z" fill="url(#unifiedFlowLit)"/>
-    <path d="M160 0 L180 20 L192 32 L172 12 Z" fill="url(#unifiedFlowDark)"/>
-    <path d="M180 20 L180 240 L192 252 L192 32 Z" fill="url(#unifiedFlowDark)"/>
-    <path d="M180 240 L0 240 L12 252 L192 252 Z" fill="url(#unifiedFlowDark)"/>
+  <g stroke="#ff2fb0" stroke-width="2" opacity="0.55">
+    <line x1="0" y1="500" x2="1280" y2="500"/>
+    <line x1="0" y1="545" x2="1280" y2="545"/>
+    <line x1="0" y1="600" x2="1280" y2="600"/>
+    <line x1="0" y1="665" x2="1280" y2="665"/>
   </g>
-  <path fill-rule="evenodd" fill="url(#unifiedFlow)"
-        d="M20 0 L160 0 L180 20 L180 240 L0 240 L0 20 Z
-           M60 40 L120 40 L140 60 L140 180 L40 180 L40 60 Z"/>
-  <path fill-rule="evenodd" fill="url(#brushed)" style="mix-blend-mode:overlay"
-        d="M20 0 L160 0 L180 20 L180 240 L0 240 L0 20 Z
-           M60 40 L120 40 L140 60 L140 180 L40 180 L40 60 Z"/>
-  <!-- recessed counter reads as a dark engraved cavity -->
-  <path d="M60 40 L120 40 L140 60 L140 180 L40 180 L40 60 Z" fill="url(#unifiedFlowDark)" opacity="0.85"/>
-  <line x1="90" y1="196" x2="90" y2="228" stroke="#EAF9FF" stroke-width="2.5" opacity="0.6" filter="url(#glow)"/>
-</g>
-
-<!-- k  (start x=910, width 170) -->
-<g transform="translate(910 140)">
-  <g>
-    <path d="M0 0 L40 0 L52 12 L12 12 Z" fill="url(#unifiedFlowLit)"/>
-    <path d="M40 60 L150 60 L162 72 L52 72 Z" fill="url(#unifiedFlowLit)"/>
-    <path d="M40 140 L170 140 L182 152 L52 152 Z" fill="url(#unifiedFlowLit)"/>
-    <path d="M0 240 L0 0 L12 12 L12 252 Z" fill="url(#unifiedFlowLit)"/>
-    <path d="M40 0 L40 60 L52 72 L52 12 Z" fill="url(#unifiedFlowDark)"/>
-    <path d="M150 60 L170 80 L182 92 L162 72 Z" fill="url(#unifiedFlowDark)"/>
-    <path d="M170 80 L170 100 L182 112 L182 92 Z" fill="url(#unifiedFlowDark)"/>
-    <path d="M170 100 L40 100 L52 112 L182 112 Z" fill="url(#unifiedFlowDark)"/>
-    <path d="M40 100 L40 140 L52 152 L52 112 Z" fill="url(#unifiedFlowDark)"/>
-    <path d="M170 140 L170 160 L182 172 L182 152 Z" fill="url(#unifiedFlowDark)"/>
-    <path d="M170 160 L150 180 L162 192 L182 172 Z" fill="url(#unifiedFlowDark)"/>
-    <path d="M150 180 L40 180 L52 192 L162 192 Z" fill="url(#unifiedFlowDark)"/>
-    <path d="M40 180 L40 240 L52 252 L52 192 Z" fill="url(#unifiedFlowDark)"/>
-    <path d="M40 240 L0 240 L12 252 L52 252 Z" fill="url(#unifiedFlowDark)"/>
+  <g stroke="#ff2fb0" stroke-width="2" opacity="0.4">
+    <line x1="100" y1="470" x2="-160" y2="720"/>
+    <line x1="280" y1="470" x2="120" y2="720"/>
+    <line x1="460" y1="470" x2="400" y2="720"/>
+    <line x1="640" y1="470" x2="640" y2="720"/>
+    <line x1="820" y1="470" x2="880" y2="720"/>
+    <line x1="1000" y1="470" x2="1160" y2="720"/>
+    <line x1="1180" y1="470" x2="1440" y2="720"/>
   </g>
-  <path d="M0 0 L40 0 L40 60 L150 60 L170 80 L170 100 L40 100 L40 140 L170 140 L170 160 L150 180 L40 180 L40 240 L0 240 Z" fill="url(#unifiedFlow)"/>
-  <path d="M0 0 L40 0 L40 60 L150 60 L170 80 L170 100 L40 100 L40 140 L170 140 L170 160 L150 180 L40 180 L40 240 L0 240 Z" fill="url(#brushed)" style="mix-blend-mode:overlay"/>
-  <line x1="20" y1="14" x2="20" y2="226" stroke="#EAF9FF" stroke-width="2.5" opacity="0.6" filter="url(#glow)"/>
-</g>
 
+  <g transform="translate(180,470) rotate(-13)">
+    <polygon points="-14,-150 14,-150 22,-140 -6,150 -22,142" fill="#ff9d4d"/>
+    <polygon points="14,-150 22,-140 -6,150 6,142" fill="#c94f13"/>
+  </g>
+
+  <g transform="translate(1080,440) rotate(11)">
+    <polygon points="-11,-88 11,-88 17,-80 -5,92 -17,86" fill="#9aa3ab"/>
+    <polygon points="11,-88 17,-80 -5,92 5,86" fill="#5c666f"/>
+  </g>
+
+  <g transform="translate(1030,570)">
+    <polygon points="0,-24 19,0 0,9 -19,0" fill="#ffce54"/>
+    <polygon points="0,-24 19,0 0,9" fill="#e2a020"/>
+  </g>
+
+  <g transform="translate(250,580)">
+    <circle cx="0" cy="0" r="9" fill="#ffd400"/>
+  </g>
+  <g transform="translate(940,610)">
+    <circle cx="0" cy="0" r="7" fill="#ffd400"/>
+  </g>
+
+  <g stroke="#3fe0ff" stroke-linecap="round" opacity="0.55">
+    <line x1="600" y1="470" x2="500" y2="560" stroke-width="4"/>
+    <line x1="630" y1="475" x2="555" y2="580" stroke-width="3"/>
+    <line x1="660" y1="470" x2="605" y2="590" stroke-width="2"/>
+  </g>
+
+  <g transform="translate(760,560) rotate(6)">
+    <polygon points="-8,-56 8,-56 12,-50 -3,58 -12,54" fill="#ff9d4d" opacity="0.85"/>
+    <polygon points="8,-56 12,-50 -3,58 3,54" fill="#c94f13" opacity="0.85"/>
+  </g>
+
+  <g transform="translate(340,600) rotate(-9)">
+    <polygon points="-10,-70 10,-70 15,-63 -4,72 -15,67" fill="#9aa3ab"/>
+    <polygon points="10,-70 15,-63 -4,72 4,67" fill="#5c666f"/>
+  </g>
+
+  <g transform="translate(60,540) rotate(15)">
+    <polygon points="0,-32 26,10 0,26 -26,10" fill="#7ce0c8"/>
+    <polygon points="0,-32 26,10 0,26" fill="#3fa688"/>
+  </g>
+
+  <g transform="translate(500,650)">
+    <polygon points="0,-20 16,0 0,7 -16,0" fill="#ffce54"/>
+    <polygon points="0,-20 16,0 0,7" fill="#e2a020"/>
+  </g>
+
+  <g transform="translate(1150,600) rotate(-6)">
+    <polygon points="0,-28 22,8 0,22 -22,8" fill="#ff6f9c"/>
+    <polygon points="0,-28 22,8 0,22" fill="#c93f6e"/>
+  </g>
+
+  <g transform="translate(920,630)">
+    <circle cx="0" cy="0" r="10" fill="#ffd400"/>
+  </g>
+
+  <g transform="translate(430,500) rotate(20)">
+    <circle cx="0" cy="0" r="6" fill="#ffd400" opacity="0.9"/>
+  </g>
+
+  <g transform="translate(640,380) rotate(-38)">
+    <circle cx="0" cy="0" r="60" fill="url(#glow)"/>
+    <polygon points="0,-58 43,38 0,20 -43,38" fill="url(#plane)"/>
+    <polygon points="0,-58 43,38 0,20" fill="url(#planeShade)"/>
+    <polygon points="0,20 -13,43 0,33 13,43" fill="#0d6f96"/>
+  </g>
+
+  <text x="640" y="200" text-anchor="middle" font-family="Trebuchet MS, Verdana, sans-serif" font-weight="700" font-size="96" letter-spacing="10" fill="#ffffff" opacity="0.95">LLOF</text>
+  <text x="640" y="240" text-anchor="middle" font-family="Trebuchet MS, Verdana, sans-serif" font-weight="400" font-size="22" letter-spacing="8" fill="#00ffe0">TERMINAL LOOP</text>
 </svg>
