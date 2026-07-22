@@ -29,7 +29,7 @@ window.addEventListener('resize', () => {
 export const cameraRig   = new CameraRig();
 export const cameraWheel = new CameraWheel(cameraRig);
 initCameraUI(cameraRig, () =>
-  (state.gameState === 'PLAYING' || state.gameState === 'CRASHING'),
+  (state.gameState === 'PLAYING' || state.gameState === 'CRASHING') && !state.isPaused,
   cameraWheel
 );
 
