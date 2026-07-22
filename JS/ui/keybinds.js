@@ -26,7 +26,16 @@ const KB_ACTIONS = [
   null, // divider
   { action: 'camera',      label: 'CAMERA'       },
   { action: 'cameraWheel', label: 'CAMERA WHEEL' },
+  null, // divider
+  { action: 'confirmYes', label: 'CONFIRM — YES' },
+  { action: 'confirmNo',  label: 'CONFIRM — NO'  },
 ];
+
+/** Space doesn't render visibly as a single character — show a readable label instead. */
+function formatKeyLabel(k) {
+  if (k === ' ') return 'SPACE';
+  return (k && k.length === 1) ? k.toUpperCase() : k;
+}
 
 let listeningAction = null;
 let defaultBinds = null;
@@ -52,7 +61,7 @@ export function renderKeybinds() {
     const keyEl = document.createElement('div');
     keyEl.className   = 'kb-key';
     const raw  = Controller.binds[entry.action] || '?';
-    keyEl.textContent = raw.length === 1 ? raw.toUpperCase() : raw;
+    keyEl.textContent = formatKeyLabel(raw);
     if (listeningAction === entry.action) keyEl.classList.add('listening');
 
     keyEl.addEventListener('click', () => {
@@ -69,7 +78,7 @@ export function renderKeybinds() {
 
 function syncKeyBadges() {
   const b = Controller.binds;
-  const safe = (k) => (k && k.length === 1) ? k.toUpperCase() : k;
+  const safe = formatKeyLabel;
   document.querySelectorAll('[id^="kb-badge-"]').forEach(el => {
     const type = el.id.replace('kb-badge-', '').replace(/-/g, '');
     const map = { home: 'home', settings: 'settings', restart: 'restart', gohome: 'home', gosettings: 'settings' };
@@ -128,10 +137,26 @@ export function initKeybinds() {
         return;
       }
 
+      // Confirm Yes/No dialog takes priority over every other hotkey below
+      // (this also stops Space here from ever triggering Play behind it).
+      if (refs.mapConfirmModal.style.display === 'block') {
+        if (k === Controller.binds.confirmYes) { e.preventDefault(); refs.mapConfirmYes.click(); return; }
+        if (k === Controller.binds.confirmNo)  { e.preventDefault(); refs.mapConfirmNo.click();  return; }
+        return;
+      }
+
+      // Same for the separate "Leave Run?" confirm dialog
+      if (refs.leaveConfirmModal.style.display === 'block') {
+        if (k === Controller.binds.confirmYes) { e.preventDefault(); refs.leaveConfirmYes.click(); return; }
+        if (k === Controller.binds.confirmNo)  { e.preventDefault(); refs.leaveConfirmNo.click();  return; }
+        return;
+      }
+
       if (k === Controller.binds.pause && state.gameState === 'PLAYING') {
         togglePause(); return;
       }
-      if (k === 'enter' && state.gameState === 'MENU') {
+      if ((k === 'enter' || (k === ' ' && !isMobile)) && state.gameState === 'MENU') {
+        e.preventDefault(); // stop Space from scrolling the page
         refs.playBtn.click(); return;
       }
       if (k === Controller.binds.restart && state.gameState === 'GAMEOVER') {
@@ -147,7 +172,8 @@ export function initKeybinds() {
         openSettings(); return;
       }
       if (k === Controller.binds.camera &&
-          (state.gameState === 'COUNTDOWN' || state.gameState === 'PLAYING' || state.gameState === 'CRASHING')) {
+          (state.gameState === 'COUNTDOWN' || state.gameState === 'PLAYING') &&
+          !state.isPaused) {
         cameraRig.next(); return;
       }
       if (k === 'm' && state.gameState === 'MENU') {
@@ -161,7 +187,8 @@ export function initKeybinds() {
       if (refs.settingsModal.style.display === 'block') return;
       const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
       if (k === Controller.binds.cameraWheel &&
-          (state.gameState === 'PLAYING' || state.gameState === 'CRASHING') &&
+          state.gameState === 'PLAYING' &&
+          !state.isPaused &&
           !cameraWheel.isOpen) {
         e.preventDefault();
         cameraWheel.open();
