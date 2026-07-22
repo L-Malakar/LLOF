@@ -12,29 +12,50 @@
 
 // ── Storage key — change this for each new event ─────────────
 //    Example: 'paperPlane_banner_halloween2025'
-const BANNER_STORAGE_KEY = 'paperPlane_banner_summersale2025';
+const BANNER_STORAGE_KEY = 'paperPlane_banner_summersale';
 
 // ── Event configuration — EDIT THIS BLOCK for each new event ─
-// ── Event phase dates ────────────────────────────────────────
-const EVENT_START = new Date('2026-07-01T00:00:00');
-const EVENT_END   = new Date('2026-07-31T23:59:59');
+// The event now recurs every year automatically: July 1 – July 31.
+// A "coming soon" banner shows for the 7 days before it starts,
+// and an "event ended" banner shows for the 7 days after it ends.
+// Nothing here needs to be touched year to year.
+const EVENT_MONTH      = 6;   // 0-indexed → July
+const EVENT_START_DAY  = 1;
+const EVENT_END_DAY    = 31;
+const PRE_WINDOW_DAYS  = 7;   // show "coming soon" banner this many days before start
+const POST_WINDOW_DAYS = 7;   // show "ended" banner this many days after end
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Build this year's event window dates from the config above. */
+function _buildEventDates(year) {
+  const start = new Date(year, EVENT_MONTH, EVENT_START_DAY, 0, 0, 0);
+  const end   = new Date(year, EVENT_MONTH, EVENT_END_DAY, 23, 59, 59);
+  return {
+    preStart:  new Date(start.getTime() - PRE_WINDOW_DAYS * DAY_MS),
+    start,
+    end,
+    postEnd:   new Date(end.getTime() + POST_WINDOW_DAYS * DAY_MS),
+  };
+}
 
 // ── Determine current phase ───────────────────────────────────
-const _now = new Date();
-const _nowMs   = _now.getTime();
-const _startMs = EVENT_START.getTime();
-const _endMs   = EVENT_END.getTime();
-const EVENT_PHASE =
-  _nowMs < _startMs ? 'pre' :
-  _nowMs <= _endMs  ? 'active' : 'post';
-
-// Export phase so index.html can read it — computed fresh each call
+// Recomputed fresh every call so it keeps working year after year
+// with zero manual date edits.
 export const getEventPhase = () => {
   const now = Date.now();
-  if (now < EVENT_START.getTime()) return 'pre';
-  if (now <= EVENT_END.getTime())  return 'active';
-  return 'post';
+  const dates = _buildEventDates(new Date(now).getFullYear());
+
+  if (now < dates.preStart.getTime())  return 'none';   // more than a week before — no banner, normal prices
+  if (now < dates.start.getTime())     return 'pre';    // within the week before — "coming soon"
+  if (now <= dates.end.getTime())      return 'active'; // event live — discounts + 2x coins
+  if (now <= dates.postEnd.getTime())  return 'post';   // within the week after — "event ended"
+  return 'none';                                         // more than a week after — no banner, normal prices
 };
+
+// Dates for the CURRENT phase, used for countdown timers below
+const _eventDates = _buildEventDates(new Date().getFullYear());
+const EVENT_PHASE = getEventPhase();
 
 // ── Per-phase banner config ───────────────────────────────────
 const BANNER_CONFIGS = {
@@ -48,7 +69,7 @@ const BANNER_CONFIGS = {
       { icon: '⭐', discount: '2× COINS', label: 'Normal Until Jul 1' },
     ],
     ctaText:      '✈️  PLAY NOW',
-    countdownEnd: '2026-07-01T00:00:00',
+    countdownEnd: _eventDates.start.toISOString(),
     timerLabel:   'EVENT STARTS IN',
   },
   active: {
@@ -61,13 +82,27 @@ const BANNER_CONFIGS = {
       { icon: '⭐', discount: '2× COINS', label: 'This Weekend' },
     ],
     ctaText:      '✈️  PLAY NOW',
-    countdownEnd: '2026-07-31T23:59:59',
+    countdownEnd: _eventDates.end.toISOString(),
     timerLabel:   'SALE ENDS IN',
   },
   post: {
     eventLabel:   '🏁 EVENT ENDED',
     title:        'SUMMER SALE',
     subtitle:     'The event has ended. Thanks for flying with us!',
+    deals:        [
+      { icon: '🗺️', discount: 'NORMAL',  label: 'All Maps'   },
+      { icon: '✈️', discount: 'NORMAL',  label: 'All Planes' },
+      { icon: '⭐', discount: '1× COINS', label: 'Standard'  },
+    ],
+    ctaText:      '✈️  PLAY NOW',
+    countdownEnd: null,
+    timerLabel:   '',
+  },
+  // Shown only when the button is opened manually outside the event window
+  none: {
+    eventLabel:   '📅 NO EVENT ACTIVE',
+    title:        'SUMMER SALE',
+    subtitle:     'Nothing running right now — check back July 1st!',
     deals:        [
       { icon: '🗺️', discount: 'NORMAL',  label: 'All Maps'   },
       { icon: '✈️', discount: 'NORMAL',  label: 'All Planes' },
@@ -120,9 +155,7 @@ function _spawnStars(container, count = 28) {
 }
 
 /** Build the full banner DOM and inject it into <body> */
-function _buildBanner() {
-  const cfg = BANNER_CONFIG;
-
+function _buildBanner(cfg = BANNER_CONFIG) {
   // ── Overlay backdrop ────────────────────────────────────────
   const overlay = document.createElement('div');
   overlay.id = 'event-banner-overlay';
@@ -307,9 +340,27 @@ function _buildBanner() {
  * To force it every single page load, remove the sessionStorage check.
  */
 export function initBanner() {
+  // Auto-popup on page load only during the pre/active/post windows —
+  // not during the 11 'none' months of the year.
+  if (EVENT_PHASE === 'none') return;
+
   // Only show once per browser session (clears when tab is closed)
   if (sessionStorage.getItem(BANNER_STORAGE_KEY)) return;
 
   // Small delay so the game canvas has time to paint first
-  setTimeout(_buildBanner, 600);
+  setTimeout(() => _buildBanner(), 600);
+}
+
+/**
+ * Call this from the EVENT button. Unlike initBanner(), this always
+ * opens the banner — regardless of the sessionStorage 'seen' flag and
+ * regardless of phase (shows the "no event active" card outside the
+ * event window). Phase is recomputed fresh so it's never stale.
+ */
+export function openEventBanner() {
+  // Don't stack a second banner if one is already open
+  if (document.getElementById('event-banner-overlay')) return;
+
+  const freshPhase = getEventPhase();
+  _buildBanner(BANNER_CONFIGS[freshPhase]);
 }
