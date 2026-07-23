@@ -92,6 +92,32 @@ export const SKIN_CONFIGS = {
     rimLight:   { color: 0xff9f68, intensity: 0.5 },
     hemiLight:  { sky: 0xff7f50, ground: 0x1a0a00, intensity: 0.55 },
   },
+  independence: {
+    label: 'TIRANGA',
+    desc:  'Tricolor skies, Ashoka wings',
+    price: 1000,
+    comingSoon: true,           // flip to false yourself on release day
+    comingSoonLabel: '🔒 COMING SOON · AUG 15',
+    img: 'https://placehold.co/400x300/FF9933/FFFFFF?text=TIRANGA',
+    bg:        0xf5f0e6,
+    fogColor:  0xf5f0e6,
+    fogNear:   8,
+    fogFar:    60,
+    gridColor1: 0xFF9933,
+    gridColor2: 0x138808,
+    gridDiv:   18,
+    colors: [0xFF9933, 0xFFFFFF, 0x138808, 0x000080, 0xFFD700],
+    emissiveIntensity: 0.5,
+    spinMult:     0.7,
+    hasGround:    true,
+    hasTricolorGround: true,
+    hasStars:     true,
+    hasClouds:    true,
+    hasChakra:    true,
+    baseDensity:  { mobile: 5, desktop: 9 },
+    rimLight:   { color: 0xFF9933, intensity: 0.45 },
+    hemiLight:  { sky: 0xffffff, ground: 0x0a3d0a, intensity: 0.5 },
+  },
 };
 
 export class WorldManager {
@@ -108,7 +134,22 @@ export class WorldManager {
     if (this.skin.hasGround) {
       const groundGeo = new THREE.PlaneGeometry(400, 400);
       let groundMat;
-      if (this.skin.hasSand) {
+      if (this.skin.hasTricolorGround) {
+        // Tiranga: three horizontal bands via a small canvas texture, tiled down the track
+        const c = document.createElement('canvas');
+        c.width = 64; c.height = 192;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#FF9933'; ctx.fillRect(0, 0, 64, 64);
+        ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 64, 64, 64);
+        ctx.fillStyle = '#138808'; ctx.fillRect(0, 128, 64, 64);
+        const tex = new THREE.CanvasTexture(c);
+        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+        tex.repeat.set(6, 30);
+        groundMat = new THREE.MeshStandardMaterial({
+          map: tex, roughness: 0.9, metalness: 0.0,
+          emissive: 0x1a1a1a, emissiveIntensity: 0.12,
+        });
+      } else if (this.skin.hasSand) {
         // Beach: gradient from sand near camera to ocean blue far away
         groundMat = new THREE.MeshStandardMaterial({
           color: 0xb5724a, roughness: 0.85, metalness: 0.0,
@@ -237,12 +278,63 @@ export class WorldManager {
       this.chunks.push(this._createChunk(-i * this.chunkSize));
     }
 
-    // ── Sun (Beach only) ──────────────────────────────────────
+    // ── Sun (Beach only) / Chakra (Independence only) ──────────
     if (skinId === 'beach') {
       this._buildSun();
     } else {
       this.sunGroup = null;
     }
+    if (this.skin.hasChakra) {
+      this._buildChakra();
+    } else {
+      this.chakraGroup = null;
+    }
+  }
+
+  // ── Build 3D Ashoka Chakra — 24-spoke wheel, hangs ahead & high ──
+  _buildChakra() {
+    this.chakraGroup = new THREE.Group();
+    this.chakraGroup.position.set(0, 20, -70);
+    this.scene.add(this.chakraGroup);
+
+    const navy = 0x000080;
+
+    // Outer rim
+    const rimGeo = new THREE.TorusGeometry(6, 0.25, 12, 48);
+    const rimMat = new THREE.MeshStandardMaterial({
+      color: navy, emissive: navy, emissiveIntensity: 0.5, metalness: 0.3, roughness: 0.4,
+    });
+    this.chakraGroup.add(new THREE.Mesh(rimGeo, rimMat));
+
+    // Hub
+    const hubGeo = new THREE.CylinderGeometry(1, 1, 0.3, 16);
+    const hub = new THREE.Mesh(hubGeo, rimMat);
+    hub.rotation.x = Math.PI / 2;
+    this.chakraGroup.add(hub);
+
+    // 24 spokes
+    this.chakraSpokes = [];
+    const spokeGeo = new THREE.BoxGeometry(0.18, 5.6, 0.18);
+    for (let i = 0; i < 24; i++) {
+      const angle = (i / 24) * Math.PI * 2;
+      const spoke = new THREE.Mesh(spokeGeo, rimMat);
+      spoke.position.set(Math.cos(angle) * 3, Math.sin(angle) * 3, 0);
+      spoke.rotation.z = angle + Math.PI / 2;
+      this.chakraGroup.add(spoke);
+      this.chakraSpokes.push(spoke);
+    }
+
+    // Soft glow halo behind it
+    const haloGeo = new THREE.CircleGeometry(9, 32);
+    const haloMat = new THREE.MeshBasicMaterial({
+      color: 0xFF9933, transparent: true, opacity: 0.08, side: THREE.DoubleSide,
+    });
+    this.chakraGroup.add(new THREE.Mesh(haloGeo, haloMat));
+
+    // Point light so it actually lights the scene, not just decorative
+    this.chakraLight = new THREE.PointLight(0xFFDD88, 2.2, 200);
+    this.chakraLight.position.copy(this.chakraGroup.position);
+    this.scene.add(this.chakraLight);
   }
 
   // ── Build 3D sun + rays ───────────────────────────────────────
@@ -344,6 +436,19 @@ export class WorldManager {
     if (this.sunLight) {
       this.scene.remove(this.sunLight);
       this.sunLight = null;
+    }
+    if (this.chakraGroup) {
+      this.chakraGroup.children.forEach(c => {
+        if (c.geometry) c.geometry.dispose();
+        if (c.material) c.material.dispose();
+      });
+      this.scene.remove(this.chakraGroup);
+      this.chakraGroup = null;
+      this.chakraSpokes = null;
+    }
+    if (this.chakraLight) {
+      this.scene.remove(this.chakraLight);
+      this.chakraLight = null;
     }
 
     if (this.cloudMesh) {
@@ -482,6 +587,12 @@ export class WorldManager {
       });
       const pulse = 1 + Math.sin(elapsed * 1.2) * 0.04;
       this.sunCore.scale.setScalar(pulse);
+    }
+    if (this.chakraGroup) {
+      this.chakraGroup.rotation.z += 0.006; // slow continuous spin — always turning, like the flag's chakra
+      const bob = Math.sin(elapsed * 0.6) * 0.6;
+      this.chakraGroup.position.y = 20 + bob;
+      if (this.chakraLight) this.chakraLight.position.y = this.chakraGroup.position.y;
     }
 
     if (this.cloudMesh) {
