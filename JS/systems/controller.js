@@ -17,6 +17,8 @@ const DEFAULT_BINDS = {
   settings:   'e',
   camera:     'r',
   cameraWheel:'Shift',
+  confirmYes: ' ',
+  confirmNo:  'c',
 };
 
 /**
