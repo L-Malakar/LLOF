@@ -7,6 +7,7 @@
  */
 
 import { initBanner, openEventBanner } from './systems/banner.js';
+import { initIndependenceBanner, initIndependenceBannerDevPreview } from '../temp_event/JS/independence-banner.js';
 import { refs } from './core/dom-refs.js';
 
 import { initSettingsPanel } from './ui/settings-panel.js';
@@ -35,6 +36,8 @@ initDevCheats();
 
 animate();
 initBanner();
+initIndependenceBanner();
+initIndependenceBannerDevPreview();
 
 // ── Event button — reopens the banner ─────────────────────────
 refs.eventBtn.addEventListener('click', () => {
