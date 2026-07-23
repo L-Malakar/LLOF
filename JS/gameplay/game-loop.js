@@ -55,9 +55,24 @@ export function animate() {
 
   // ── Speed modifiers from power-ups ───────────────────────────
   let effectiveSpeed = state.dynamicSpeed;
-  if (game.collectables.hasPowerUp('SPEED'))      effectiveSpeed *= 2.0;
+  let boostMult = 1.0; // tracks how "atomic" the boost feels, for FX intensity
+  if (game.collectables.hasPowerUp('SPEED'))      { effectiveSpeed *= 2.0; boostMult = Math.max(boostMult, 2.0); }
   if (game.collectables.hasPowerUp('SLOW_MO'))    effectiveSpeed *= 0.5;
-  if (game.collectables.hasPowerUp('TURBO_FLIP')) effectiveSpeed *= 3.0;
+  if (game.collectables.hasPowerUp('TURBO_FLIP')) { effectiveSpeed *= 3.0; boostMult = Math.max(boostMult, 3.0); }
+
+  // ── Recoil + screen FX while a speed boost is active ─────────
+  const isBoosting = state.gameState === 'PLAYING' && boostMult > 1.0;
+  const targetRecoilZ = isBoosting ? -0.35 * (boostMult / 3.0) - 0.15 : 0;
+  game.player.group.position.z = THREE.MathUtils.lerp(
+    game.player.group.position.z, targetRecoilZ, Math.min(1, delta * 6)
+  );
+  if (refs.speedFxOverlay) {
+    refs.speedFxOverlay.classList.toggle('active', isBoosting);
+    refs.speedFxOverlay.style.setProperty('--speed-fx-intensity', isBoosting ? Math.min(1, (boostMult - 1) / 2 + 0.4) : 0);
+    // TURBO_FLIP (3x) reads hotter/purple; plain SPEED (2x) stays cyan
+    const boostColor = game.collectables.hasPowerUp('TURBO_FLIP') ? '200, 0, 255' : '0, 220, 255';
+    refs.speedFxOverlay.style.setProperty('--speed-fx-color', boostColor);
+  }
 
   // Always scroll world (even in countdown so it feels alive)
   game.world.distance = state.score;
@@ -156,6 +171,7 @@ export function animate() {
       playCrash();
       vibrate([80, 30, 80, 30, 150]);
       triggerShake(0.6, 0.9);
+      if (refs.speedFxOverlay) refs.speedFxOverlay.classList.remove('active');
       state.gameState = 'CRASHING';
       refs.pauseBtn.style.display   = 'none';
       refs.diffLabel.style.display  = 'none';
