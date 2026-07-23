@@ -48,6 +48,9 @@ export const refs = {
   // Power-up HUD
   powerupHud: document.getElementById('powerup-hud'),
 
+  // Speed FX
+  speedFxOverlay: document.getElementById('speed-fx-overlay'),
+
   // Map selector + its confirm modal
   mapConfirmBackdrop: document.getElementById('map-confirm-backdrop'),
   mapConfirmModal:    document.getElementById('map-confirm-modal'),
