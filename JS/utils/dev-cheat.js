@@ -27,13 +27,13 @@ export function initDevCheats() {
 
     if (e.code === 'KeyM' && e.ctrlKey && e.shiftKey && e.altKey) {
       e.stopPropagation();
-      if (!state.ownedMaps.includes('beach')) state.ownedMaps.push('beach');
-      state.currentMap = 'beach';
+      if (!state.ownedMaps.includes('independence')) state.ownedMaps.push('independence');
+      state.currentMap = 'independence';
       saveProgress();
       applyMapToScene();
       rebuildWorld();
       renderMapSelector();
-      showPickupToast('🔧 BEACH SUNSET MAP', 0x00e5ff);
+      showPickupToast('🔧 TRIRANGA MAP', 0xFF9933);
     }
   }, true);
 }
