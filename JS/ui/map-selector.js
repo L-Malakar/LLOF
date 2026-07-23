@@ -23,7 +23,7 @@ export function renderMapSelector() {
     const active = state.currentMap === id;
 
     // Beach map is locked with COMING SOON only during pre-event
-    const isComingSoon = id === 'beach' && phase === 'pre';
+    const isComingSoon = cfg.comingSoon === true;
 
     const card = document.createElement('div');
     card.className = 'map-card'
@@ -34,7 +34,7 @@ export function renderMapSelector() {
     let statusHTML = '';
     if (isComingSoon) {
       // Override everything — show COMING SOON badge, block interaction
-      statusHTML = '<span class="map-status map-status-coming-soon">🔒 COMING SOON · JUL 1</span>';
+      statusHTML = `<span class="map-status map-status-coming-soon">${cfg.comingSoonLabel || '🔒 COMING SOON'}</span>`;
     } else if (active) {
       statusHTML = '<span class="map-status map-status-active">✓ ACTIVE</span>';
     } else if (owned) {
