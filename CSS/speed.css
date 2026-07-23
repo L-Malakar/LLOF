@@ -1,0 +1,89 @@
+/* speed-fx.css — atomic speed boost screen effect v2 */
+:root {
+  --speed-fx-color: 0, 220, 255; /* default cyan (SPEED); JS overrides for TURBO */
+}
+
+#speed-fx-overlay {
+  position: fixed; inset: 0; z-index: 55;
+  pointer-events: none; opacity: 0;
+  transition: opacity 0.2s ease;
+  overflow: hidden;
+}
+#speed-fx-overlay.active { opacity: var(--speed-fx-intensity, 1); }
+
+/* ── Warp streaks — 3 staggered layers rushing outward from center,
+      NOT rotating in place. Each layer is a starburst of thin wedges
+      that scales up + fades, looping with an offset delay so the
+      rush never gaps. ─────────────────────────────────────────── */
+.speed-fx-streak {
+  position: absolute; inset: -20%;
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgba(255,255,255,0.85) 0deg 0.35deg,
+    transparent 0.35deg 4deg
+  );
+  -webkit-mask: radial-gradient(circle at center,
+    transparent 22%, rgba(0,0,0,0.15) 32%, rgba(0,0,0,0.55) 42%,
+    #000 52%, #000 62%, rgba(0,0,0,0.4) 74%, transparent 88%);
+          mask: radial-gradient(circle at center,
+    transparent 22%, rgba(0,0,0,0.15) 32%, rgba(0,0,0,0.55) 42%,
+    #000 52%, #000 62%, rgba(0,0,0,0.4) 74%, transparent 88%);
+  mix-blend-mode: screen;
+  transform-origin: center;
+  animation: speedFxRush 0.9s cubic-bezier(0.1, 0.6, 0.3, 1) infinite;
+  opacity: 0;
+}
+.speed-fx-streak:nth-child(1) { animation-delay: 0s;    }
+.speed-fx-streak:nth-child(2) { animation-delay: 0.3s;  }
+.speed-fx-streak:nth-child(3) { animation-delay: 0.6s;  }
+
+@keyframes speedFxRush {
+  0%   { transform: scale(0.55); opacity: 0; }
+  12%  { opacity: 0.9; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+
+/* ── Colour tint on the streaks, driven by --speed-fx-color ────── */
+#speed-fx-tint {
+  position: absolute; inset: 0;
+  background: rgba(var(--speed-fx-color), 0.16);
+  mix-blend-mode: screen;
+  -webkit-mask: radial-gradient(circle at center,
+    transparent 22%, rgba(0,0,0,0.2) 35%, rgba(0,0,0,0.7) 48%, #000 65%);
+          mask: radial-gradient(circle at center,
+    transparent 22%, rgba(0,0,0,0.2) 35%, rgba(0,0,0,0.7) 48%, #000 65%);
+}
+
+/* ── Chromatic fringe — thin offset R/B slivers at the edges ───── */
+#speed-fx-chroma {
+  position: absolute; inset: 0;
+  box-shadow:
+    inset 6px 0 12px -6px rgba(255, 0, 60, 0.55),
+    inset -6px 0 12px -6px rgba(0, 200, 255, 0.55),
+    inset 0 6px 12px -6px rgba(255, 0, 60, 0.35),
+    inset 0 -6px 12px -6px rgba(0, 200, 255, 0.35);
+  animation: speedFxChromaPulse 0.35s ease-in-out infinite alternate;
+}
+@keyframes speedFxChromaPulse { from { opacity: 0.55; } to { opacity: 1; } }
+
+/* ── Vignette — pulses in time with the streak rush ─────────────── */
+#speed-fx-vignette {
+  position: absolute; inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 22%,
+    transparent 32%,
+    rgba(var(--speed-fx-color), 0.06) 50%,
+    rgba(var(--speed-fx-color), 0.16) 68%,
+    rgba(0, 0, 0, 0.5) 100%
+  );
+  animation: speedFxVignettePulse 0.9s ease-in-out infinite;
+}
+@keyframes speedFxVignettePulse {
+  0%, 100% { opacity: 0.7; }
+  50%      { opacity: 1;   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .speed-fx-streak, #speed-fx-chroma, #speed-fx-vignette { animation: none; opacity: 0.6; }
+}
