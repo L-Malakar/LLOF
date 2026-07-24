@@ -5,11 +5,23 @@
  *  Does not touch any core game file.
  */
 
+import { getDevPhaseOverride } from '../../JS/utils/utils.js';
+
 const INDEP_STORAGE_KEY = 'paperPlane_banner_independence2026';
 const RELEASE_DATE = new Date(2026, 7, 15, 0, 0, 0); // 15 Aug 2026, 00:00
 const DAY_MS = 24 * 60 * 60 * 1000;
 const PRE_START = new Date(RELEASE_DATE.getTime() - 7 * DAY_MS);  // 8 Aug
 const POST_END  = new Date(RELEASE_DATE.getTime() + 7 * DAY_MS);  // 22 Aug
+
+function _getIndepPhase() {
+  const override = getDevPhaseOverride('independence');
+  if (override !== 'auto') return override;
+  const now = Date.now();
+  if (now < PRE_START.getTime())    return 'none';
+  if (now < RELEASE_DATE.getTime()) return 'pre';
+  if (now <= POST_END.getTime())    return 'active';
+  return 'post';
+}
 
 function _formatMs(ms) {
   if (ms <= 0) return '00:00:00:00';
@@ -42,7 +54,7 @@ function _spawnStars(container, count = 24) {
 let _countdownInterval = null;
 
 function buildIndepBanner() {
-  const released = Date.now() >= RELEASE_DATE.getTime();
+  const phase = _getIndepPhase(); // 'none' | 'pre' | 'active' | 'post'
 
   const overlay = document.createElement('div');
   overlay.id = 'indep-banner-overlay';
@@ -76,7 +88,8 @@ function buildIndepBanner() {
     <rect width="16" height="3.67" y="7.33" fill="#138808"/>
     <circle cx="8" cy="5.5" r="1.2" fill="none" stroke="#000080" stroke-width="0.3"/>
   </svg>`;
-  pill.innerHTML = flagSVG + (released ? 'NOW LIVE' : 'COMING SOON');
+  const pillText = { none: 'NO EVENT ACTIVE', pre: 'COMING SOON', active: 'NOW LIVE', post: 'EVENT ENDED' }[phase];
+  pill.innerHTML = flagSVG + pillText;
 
   const title = document.createElement('div');
   title.id = 'indep-banner-title';
@@ -84,15 +97,21 @@ function buildIndepBanner() {
 
   const subtitle = document.createElement('div');
   subtitle.id = 'indep-banner-subtitle';
-  subtitle.textContent = released
-    ? 'The tricolor map has landed — fly it now!'
-    : 'A brand new map skin arrives 15 August';
+  subtitle.textContent = {
+    none:   'Nothing running right now — check back closer to 15 August.',
+    pre:    'A brand new map skin arrives 15 August',
+    active: 'The tricolor map has landed — fly it now!',
+    post:   'The event has ended. Tiranga stays unlocked for everyone who has it!',
+  }[phase];
 
   const chipsRow = document.createElement('div');
   chipsRow.id = 'indep-banner-chips';
-  const chipData = released
-  ? [{ icon: '🗺️', main: 'UNLOCKED', label: 'Tiranga Map' }, { icon: '🪁', main: 'NEW', label: 'Chakra FX' }]
-    : [{ icon: '📅', main: 'AUG 15', label: 'Release Day' }, { icon: '🔒', main: 'LOCKED', label: 'Tiranga Map' }];
+const chipData = {
+    none:   [{ icon: '📅', main: 'AUG 15', label: 'Release Day' }, { icon: '🔒', main: 'LOCKED', label: 'Tiranga Map' }],
+    pre:    [{ icon: '📅', main: 'AUG 15', label: 'Release Day' }, { icon: '🔒', main: 'LOCKED', label: 'Tiranga Map' }],
+    active: [{ icon: '🗺️', main: 'UNLOCKED', label: 'Tiranga Map' }, { icon: '🪁', main: 'NEW', label: 'Chakra FX' }],
+    post:   [{ icon: '🗺️', main: 'NORMAL', label: 'Tiranga Map' }, { icon: '🏁', main: 'ENDED', label: 'Event Status' }],
+  }[phase];
   chipData.forEach(d => {
     const chip = document.createElement('div');
     chip.className = 'indep-chip';
@@ -107,7 +126,7 @@ function buildIndepBanner() {
   cta.textContent = '✈️  PLAY NOW';
 
   let timerStrip = null;
-  if (!released) {
+  if (phase === 'pre') {
     timerStrip = document.createElement('div');
     timerStrip.id = 'indep-banner-timer';
     const dot = document.createElement('span');
@@ -129,8 +148,14 @@ function buildIndepBanner() {
   const glow = document.createElement('div');
   glow.id = 'indep-banner-glow';
 
+  // Version tag — same credit line/style as the Summer Sale banner
+  const versionTag = document.createElement('div');
+  versionTag.textContent = 'L. Malakar v-2.26.9';
+  versionTag.style.cssText = 'font-family:inherit; font-size:clamp(7px,1vw,11px); color:rgba(255,255,255,0.25); letter-spacing:2px; text-transform:uppercase; margin-top:2px;';
+
   content.append(chakra, pill, title, subtitle, chipsRow, cta);
   if (timerStrip) content.appendChild(timerStrip);
+  content.appendChild(versionTag);
 
   card.append(bg, particles, content, glow);
 
@@ -181,10 +206,28 @@ function buildIndepBanner() {
 }
 
 export function initIndependenceBanner() {
-  const now = Date.now();
-  if (now < PRE_START.getTime() || now > POST_END.getTime()) return;
-  if (sessionStorage.getItem(INDEP_STORAGE_KEY)) return;
-  setTimeout(() => buildIndepBanner(), 800);
+  const phase = _getIndepPhase();
+  if (phase === 'none') return;
+  if (!sessionStorage.getItem(INDEP_STORAGE_KEY)) {
+    setTimeout(() => buildIndepBanner(), 800);
+  }
+  _reskinEventBtn();
+}
+
+// Temporarily reskin the corner EVENT button (next to MAP) and point
+// it at the Tiranga banner instead of the Summer Sale one, for the
+// duration of the event window. Node-clone swap so the original
+// Summer Sale click handler in main.js is cleanly detached, not
+// stacked — restoring it just means not calling this function
+// (i.e. deleting temp_event/).
+function _reskinEventBtn() {
+  const oldBtn = document.getElementById('eventBtn');
+  if (!oldBtn) return;
+  const newBtn = oldBtn.cloneNode(true);
+  newBtn.classList.add('indep-skin');
+  newBtn.innerHTML = '<span id="indep-cta-chakra"></span> <span>TIRANGA</span>';
+  newBtn.addEventListener('click', () => buildIndepBanner());
+  oldBtn.replaceWith(newBtn);
 }
 
 // 🔧 DEV CHEAT — REMOVE BEFORE RELEASE (or just delete temp_event/ folder)
