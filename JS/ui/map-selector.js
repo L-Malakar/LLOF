@@ -14,8 +14,12 @@ import { syncHUD, triggerShake } from './hud.js';
 import { showPickupToast } from './toast.js';
 import { vibrate } from '../utils/utils.js';
 
+let _cardEls = [];
+let _focusIndex = 0;
+
 export function renderMapSelector() {
   refs.mapOpts.innerHTML = '';
+  _cardEls = [];
   const phase = getEventPhase(); // 'pre' | 'active' | 'post'
 
   Object.entries(SKIN_CONFIGS).forEach(([id, cfg]) => {
@@ -69,11 +73,38 @@ export function renderMapSelector() {
     `;
 
     card.addEventListener('click', () => {
-      if (isComingSoon) return; // block purchase before event starts
+      if (isComingSoon) {
+        playCrash();
+        vibrate([50, 30, 50]);
+        showPickupToast('🔒 THIS IS NOT OBTAINABLE YET', 0xff2255);
+        return;
+      }
       selectMap(id);
     });
     refs.mapOpts.appendChild(card);
+    _cardEls.push({ el: card, id, isComingSoon });
   });
+
+  if (_focusIndex >= _cardEls.length) _focusIndex = 0;
+  _applyFocusHighlight();
+}
+
+function _applyFocusHighlight() {
+  _cardEls.forEach((c, i) => c.el.classList.toggle('kb-focused', i === _focusIndex));
+}
+
+/** Move the keyboard focus ring left/right (or up/down) through the map cards. */
+export function moveMapFocus(delta) {
+  if (!_cardEls.length) return;
+  _focusIndex = (_focusIndex + delta + _cardEls.length) % _cardEls.length;
+  _applyFocusHighlight();
+}
+
+/** Activate (select/buy) whichever map card currently has keyboard focus. */
+export function activateFocusedMap() {
+  const entry = _cardEls[_focusIndex];
+  if (!entry) return;
+  entry.el.click(); // the click handler itself now shows the "unobtainable" toast for locked/coming-soon cards
 }
 
 export function selectMap(mapId) {
@@ -132,7 +163,10 @@ export function initMapSelector() {
     playClick();
     const visible = refs.mapSelector.style.display === 'block';
     refs.mapSelector.style.display = visible ? 'none' : 'block';
-    if (!visible) renderMapSelector();
+    if (!visible) {
+      _focusIndex = Math.max(0, _cardEls.findIndex(c => c.id === state.currentMap));
+      renderMapSelector();
+    }
   });
 
   // Close map selector when clicking outside
