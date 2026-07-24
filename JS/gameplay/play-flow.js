@@ -102,6 +102,15 @@ export function initPlayFlow() {
 
     // START GAME
     playClick();
+
+    // If either event banner is still on screen (player was fast /
+    // clicked PLAY behind it), force it closed immediately instead
+    // of letting it hang around over the gameplay view.
+    const eventBannerClose = document.getElementById('banner-close-btn');
+    if (eventBannerClose) eventBannerClose.click();
+    const indepBannerClose = document.getElementById('indep-banner-close');
+    if (indepBannerClose) indepBannerClose.click();
+
     if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});
     state.gameState = 'TRANSITION';
     refs.menuUI.style.opacity  = '0';
