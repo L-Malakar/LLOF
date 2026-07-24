@@ -70,10 +70,12 @@ export const Controller = {
 
   _handleKey(event, isPressed) {
     const k = event.key.length === 1 ? event.key.toLowerCase() : event.key;
-    if (k === this.binds.up)       { this.keys.up      = isPressed; event.preventDefault(); }
-    if (k === this.binds.down)     { this.keys.down    = isPressed; event.preventDefault(); }
-    if (k === this.binds.left)     { this.keys.left    = isPressed; event.preventDefault(); }
-    if (k === this.binds.right)    { this.keys.right   = isPressed; event.preventDefault(); }
+    // Arrow keys always work for movement, alongside whatever the
+    // player has up/down/left/right rebound to — not a replacement.
+    if (k === this.binds.up    || event.key === 'ArrowUp')    { this.keys.up      = isPressed; event.preventDefault(); }
+    if (k === this.binds.down  || event.key === 'ArrowDown')  { this.keys.down    = isPressed; event.preventDefault(); }
+    if (k === this.binds.left  || event.key === 'ArrowLeft')  { this.keys.left    = isPressed; event.preventDefault(); }
+    if (k === this.binds.right || event.key === 'ArrowRight') { this.keys.right   = isPressed; event.preventDefault(); }
     if (k === this.binds.pause)    { this.keys.pause   = isPressed; event.preventDefault(); }
     if (k === this.binds.restart)  { this.keys.restart = isPressed; event.preventDefault(); }
     if (k === this.binds.home)     { this.keys.home    = isPressed; event.preventDefault(); }
