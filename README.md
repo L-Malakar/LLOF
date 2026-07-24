@@ -24,11 +24,17 @@ LLOF/
 ├── CSS/
 │   ├── style.css               # Main sci-fi theme stylesheet for the whole game UI
 │   ├── banner.css              # Styling for the event banner overlay
-│   └── world.css               # Per-map-skin visual overrides (backgrounds, skin effects)
+│   ├── world.css               # Per-map-skin visual overrides (backgrounds, skin effects)
+│   └── speed-fx.css            # Full-screen speed-boost effect (streaks/chroma/vignette)
 ├── asset/
 │   ├── logo.svg                # Studio square icon/monogram logo
 │   ├── Banner.svg               # Studio full wordmark logo
 │   └── music.webm              # Background music track
+├── temp_event/                 # ⚠ TEMPORARY — Independence Day event, delete after 22 Aug
+│   ├── CSS/
+│   │   └── independence-banner.css   # Styling for the Tiranga event popup banner
+│   └── JS/
+│       └── independence-banner.js    # Builds/shows the Tiranga event popup + dev preview cheat
 └── JS/
     ├── main.js                 # Entry point — imports and starts every feature module in order
     ├── favicon.js               # Generates favicon/PWA icons from logo.svg at runtime
@@ -42,12 +48,12 @@ LLOF/
     │   ├── Mcontroller.js       # Handles mobile input (joystick/dpad/gyroscope)
     │   ├── camera.js            # Controls the multi-angle camera rig
     │   ├── player.js            # Manages the player plane's geometry, hitbox, and crash animation
-    │   ├── world.js             # Generates terrain chunks, obstacles, and difficulty progression
+    │   ├── world.js             # Generates terrain chunks, obstacles, difficulty progression, and map skins (incl. Tiranga chakra + tricolor ground)
     │   ├── collectable.js       # Manages coin and power-up spawning/recycling
-    │   ├── banner.js            # Runs the configurable event banner system
+    │   ├── banner.js            # Runs the configurable (Summer Sale) event banner system
     │   └── music-handler.js     # Plays background music and synthesized sound effects
     ├── gameplay/
-    │   ├── game-loop.js         # Runs the main per-frame animate/update loop
+    │   ├── game-loop.js         # Runs the main per-frame animate/update loop (incl. speed-boost recoil/FX)
     │   ├── play-flow.js         # Handles play/go-home/retry/leave-confirm flow
     │   ├── collisions.js        # Detects collisions with obstacles, coins, and power-ups
     │   └── powerups.js          # Manages power-up HUD display, effects, and expiry
@@ -57,8 +63,8 @@ LLOF/
     │   ├── countdown.js          # Displays the pre-round countdown overlay
     │   ├── pause.js              # Toggles the game's pause state
     │   ├── plane-selector.js     # Runs the menu's plane selection carousel
-    │   ├── map-selector.js       # Runs the map skin selection UI
-    │   ├── keybinds.js           # Displays and handles rebinding of keyboard controls
+    │   ├── map-selector.js       # Runs the map skin selection UI (incl. keyboard focus nav)
+    │   ├── keybinds.js           # Displays/handles rebinding + all arrow-key & Space menu navigation
     │   ├── settings-panel.js     # Runs the settings modal
     │   └── confirm-modal.js      # Generic reusable yes/no confirmation modal
     └── utils/
