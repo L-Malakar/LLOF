@@ -1432,6 +1432,11 @@ canvas {
   background: rgba(0,229,255,0.04);
 }
 
+.kb-focused {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+  box-shadow: 0 0 14px rgba(255,255,255,0.5);
+}
 .map-card.active {
   border-color: rgba(0,229,255,0.35);
   background: rgba(0,229,255,0.08);
