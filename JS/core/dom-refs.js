@@ -19,6 +19,8 @@ export const refs = {
   planeNameEl:     document.getElementById('planeName'),
   menuStats:       document.getElementById('menu-stats'),
   mainSettingsBtn: document.getElementById('main-settings-btn'),
+  pauseSettingsBtn: document.getElementById('pause-settings-btn'),
+  goSettingsBtn:    document.getElementById('go-settings-btn'),
   settingsModal:   document.getElementById('settings-modal'),
   speedBar:        document.getElementById('speed-bar'),
   diffLabel:       document.getElementById('diff-label'),
