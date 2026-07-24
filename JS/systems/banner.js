@@ -42,7 +42,12 @@ function _buildEventDates(year) {
 // ── Determine current phase ───────────────────────────────────
 // Recomputed fresh every call so it keeps working year after year
 // with zero manual date edits.
+import { getDevPhaseOverride } from '../utils/utils.js';
+
 export const getEventPhase = () => {
+  const override = getDevPhaseOverride('summer');
+  if (override !== 'auto') return override;
+
   const now = Date.now();
   const dates = _buildEventDates(new Date(now).getFullYear());
 
@@ -259,7 +264,7 @@ function _buildBanner(cfg = BANNER_CONFIG) {
 
   // Version tag
   const versionTag = document.createElement('div');
-  versionTag.textContent = 'L. Malakar v-2.26.17';
+  versionTag.textContent = 'L. Malakar v-2.26.7';
   versionTag.style.cssText = 'font-family:var(--banner-font-body); font-size:clamp(7px,1vw,11px); color:rgba(255,255,255,0.25); letter-spacing:2px; text-transform:uppercase; margin-top:2px;';
 
   // ── Assemble content ─────────────────────────────────────────
