@@ -17,7 +17,7 @@ import { initPause } from './ui/pause.js';
 import { initPlayFlow } from './gameplay/play-flow.js';
 import { initConfirmModal } from './ui/confirm-modal.js';
 import { initMapSelector } from './ui/map-selector.js';
-import { initDevCheats } from './utils/dev-cheat.js';
+import { initDevCheats, initDevEventControls } from './utils/dev-cheat.js';
 import { animate } from './gameplay/game-loop.js';
 import { isMobile } from './utils/utils.js';
 
@@ -36,6 +36,7 @@ initDevCheats();
 
 animate();
 initBanner();
+initDevEventControls();
 initIndependenceBanner();
 initIndependenceBannerDevPreview();
 
