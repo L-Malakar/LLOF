@@ -155,6 +155,32 @@
         <span class="toggle-slider"></span>
       </label>
     </div>
+    <!-- 🔧 DEV ONLY — hidden unless running on localhost, shown by dev-cheat.js -->
+    <div class="setting-row" id="devEventRowSummer" style="display:none;">
+      <span class="setting-label">🔧 DEV: SUMMER SALE</span>
+      <select id="devPhaseSummer" class="dev-phase-select">
+        <option value="auto">AUTO (REAL)</option>
+        <option value="none">NOT ACTIVE</option>
+        <option value="pre">UPCOMING</option>
+        <option value="active">ACTIVE</option>
+        <option value="post">ENDED</option>
+      </select>
+    </div>
+    <div class="setting-row" id="devEventRowIndep" style="display:none;">
+      <span class="setting-label">🔧 DEV: TIRANGA</span>
+      <select id="devPhaseIndependence" class="dev-phase-select">
+        <option value="auto">AUTO (REAL)</option>
+        <option value="none">NOT ACTIVE</option>
+        <option value="pre">UPCOMING</option>
+        <option value="active">ACTIVE</option>
+        <option value="post">ENDED</option>
+      </select>
+    </div>
+    <div class="setting-row" id="devPhaseResetRow" style="display:none; justify-content:center;">
+      <button id="devPhaseResetBtn" style="font-size:0.62rem; padding:6px 16px; letter-spacing:2px;">
+        RESET TO DEFAULT
+      </button>
+    </div>
   </div>
 
   <!-- ── Keybinds tab ─────────────────────────────────────── -->
