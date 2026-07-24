@@ -247,3 +247,19 @@
   #indep-banner-chips { gap: 5px; }
   .indep-chip { padding: 4px 8px; }
 }
+/* ── Event button reskin (temp_event-only, active 8–22 Aug) ─── */
+#eventBtn.indep-skin {
+  background:
+    linear-gradient(#0d0d0d, #0d0d0d) padding-box,
+    linear-gradient(90deg, var(--indep-accent-1), var(--indep-accent-3), var(--indep-accent-2)) border-box;
+  border: 2px solid transparent;
+  box-shadow: 0 0 14px rgba(255,153,51,0.5);
+  animation: indepEventBtnPulse 2.2s ease-in-out infinite;
+}
+#eventBtn.indep-skin:hover {
+  box-shadow: 0 0 22px rgba(19,136,8,0.65);
+}
+@keyframes indepEventBtnPulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(255,153,51,0.45); }
+  50%      { box-shadow: 0 0 20px rgba(19,136,8,0.55); }
+}
