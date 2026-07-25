@@ -6,6 +6,18 @@
  */
 
 import { getDevPhaseOverride } from '../../JS/utils/utils.js';
+import { registerEvent } from '../../JS/systems/event-hub.js';
+
+registerEvent({
+  id: 'independence',
+  name: 'TIRANGA',
+  getPhase: _getIndepPhase,
+  theme: { bg: 'linear-gradient(90deg, #FF9933, #138808)', glow: 'rgba(255,153,51,0.5)' },
+  open: () => { if (!document.getElementById('indep-banner-overlay')) buildIndepBanner(); },
+  overlayId: 'indep-banner-overlay',
+  closeBtnId: 'indep-banner-close',
+  cardId: 'indep-banner-card',
+});
 
 const INDEP_STORAGE_KEY = 'paperPlane_banner_independence2026';
 const RELEASE_DATE = new Date(2026, 7, 15, 0, 0, 0); // 15 Aug 2026, 00:00
@@ -211,23 +223,6 @@ export function initIndependenceBanner() {
   if (!sessionStorage.getItem(INDEP_STORAGE_KEY)) {
     setTimeout(() => buildIndepBanner(), 800);
   }
-  _reskinEventBtn();
-}
-
-// Temporarily reskin the corner EVENT button (next to MAP) and point
-// it at the Tiranga banner instead of the Summer Sale one, for the
-// duration of the event window. Node-clone swap so the original
-// Summer Sale click handler in main.js is cleanly detached, not
-// stacked — restoring it just means not calling this function
-// (i.e. deleting temp_event/).
-function _reskinEventBtn() {
-  const oldBtn = document.getElementById('eventBtn');
-  if (!oldBtn) return;
-  const newBtn = oldBtn.cloneNode(true);
-  newBtn.classList.add('indep-skin');
-  newBtn.innerHTML = '<span id="indep-cta-chakra"></span> <span>TIRANGA</span>';
-  newBtn.addEventListener('click', () => buildIndepBanner());
-  oldBtn.replaceWith(newBtn);
 }
 
 // 🔧 DEV CHEAT — REMOVE BEFORE RELEASE (or just delete temp_event/ folder)
