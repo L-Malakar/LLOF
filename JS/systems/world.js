@@ -98,7 +98,7 @@ export const SKIN_CONFIGS = {
     price: 1000,
     comingSoon: true,           // flip to false yourself on release day
     comingSoonLabel: '🔒 COMING SOON · AUG 15',
-    img: 'https://placehold.co/400x300/FF9933/FFFFFF?text=TIRANGA',
+    img: 'https://yt3.ggpht.com/c3acAVf8rdpxHRNCCnqL8xRDeZ-WDbDcc9hNol5Hv_d-fwnI20muerGuIokZFhtgOVYSknMhC_kkPw=s640-c-fcrop64=1,38130000c7ecffff-rw-nd-v1',
     bg:        0xf5f0e6,
     fogColor:  0xf5f0e6,
     fogNear:   8,
@@ -111,9 +111,12 @@ export const SKIN_CONFIGS = {
     spinMult:     0.7,
     hasGround:    true,
     hasTricolorGround: true,
+    groundScroll: true,      // slow-scrolling stripes — "flowing flag"
     hasStars:     true,
     hasClouds:    true,
     hasChakra:    true,
+    hasPetals:    true,      // drifting marigold petals
+    hasMonument:  true,      // distant India Gate–style silhouette
     baseDensity:  { mobile: 5, desktop: 9 },
     rimLight:   { color: 0xFF9933, intensity: 0.45 },
     hemiLight:  { sky: 0xffffff, ground: 0x0a3d0a, intensity: 0.5 },
@@ -149,6 +152,7 @@ export class WorldManager {
           map: tex, roughness: 0.9, metalness: 0.0,
           emissive: 0x1a1a1a, emissiveIntensity: 0.12,
         });
+        this._tricolorTex = tex; // kept for the scroll animation in update()
       } else if (this.skin.hasSand) {
         // Beach: gradient from sand near camera to ocean blue far away
         groundMat = new THREE.MeshStandardMaterial({
@@ -289,6 +293,77 @@ export class WorldManager {
     } else {
       this.chakraGroup = null;
     }
+    if (this.skin.hasPetals) {
+      this._buildPetals();
+    } else {
+      this.petalMesh = null;
+    }
+    if (this.skin.hasMonument) {
+      this._buildMonument();
+    } else {
+      this.monumentGroup = null;
+    }
+  }
+
+  // ── Drifting marigold petals (one InstancedMesh, mirrors cloud pattern) ──
+  _buildPetals() {
+    const count = this.isMobile ? 30 : 60;
+    const petalGeo = new THREE.PlaneGeometry(0.35, 0.35);
+    const petalMat = new THREE.MeshBasicMaterial({
+      color: 0xFFA500, transparent: true, opacity: 0.75,
+      side: THREE.DoubleSide, depthWrite: false,
+    });
+    this.petalMesh = new THREE.InstancedMesh(petalGeo, petalMat, count);
+    this.petalMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+
+    this.petalData = [];
+    const dummy = new THREE.Object3D();
+    for (let i = 0; i < count; i++) {
+      const data = {
+        x: (Math.random() - 0.5) * 60,
+        y: 4 + Math.random() * 16,
+        z: -10 - Math.random() * 140,
+        fallSpeed: 0.015 + Math.random() * 0.02,
+        driftPhase: Math.random() * Math.PI * 2,
+        spinPhase: Math.random() * Math.PI * 2,
+        color: Math.random() > 0.5 ? 0xFFA500 : 0xFFFFFF,
+      };
+      this.petalData.push(data);
+      dummy.position.set(data.x, data.y, data.z);
+      dummy.updateMatrix();
+      this.petalMesh.setMatrixAt(i, dummy.matrix);
+    }
+    this.petalMesh.instanceMatrix.needsUpdate = true;
+    this.scene.add(this.petalMesh);
+  }
+
+  // ── Distant India Gate–style monument silhouette (static, like the sun/chakra) ──
+  _buildMonument() {
+    this.monumentGroup = new THREE.Group();
+    this.monumentGroup.position.set(0, 0, -220);
+    this.scene.add(this.monumentGroup);
+
+    const silMat = new THREE.MeshBasicMaterial({ color: 0x1a1a2e, transparent: true, opacity: 0.55 });
+
+    const archWidth = 26, pillarW = 4, pillarH = 22, gap = archWidth - pillarW * 2;
+    const pillarGeo = new THREE.BoxGeometry(pillarW, pillarH, pillarW);
+    const leftPillar  = new THREE.Mesh(pillarGeo, silMat);
+    leftPillar.position.set(-(gap / 2 + pillarW / 2), pillarH / 2, 0);
+    const rightPillar = new THREE.Mesh(pillarGeo, silMat);
+    rightPillar.position.set(gap / 2 + pillarW / 2, pillarH / 2, 0);
+    this.monumentGroup.add(leftPillar, rightPillar);
+
+    const topGeo = new THREE.BoxGeometry(archWidth, 4, pillarW);
+    const top = new THREE.Mesh(topGeo, silMat);
+    top.position.set(0, pillarH + 2, 0);
+    this.monumentGroup.add(top);
+
+    const archGeo = new THREE.CylinderGeometry(gap / 2, gap / 2, pillarW, 24, 1, false, 0, Math.PI);
+    const arch = new THREE.Mesh(archGeo, silMat);
+    arch.rotation.z = Math.PI;
+    arch.rotation.x = Math.PI / 2;
+    arch.position.set(0, pillarH - gap / 2, 0);
+    this.monumentGroup.add(arch);
   }
 
   // ── Build 3D Ashoka Chakra — 24-spoke wheel, hangs ahead & high ──
@@ -458,6 +533,22 @@ export class WorldManager {
       this.cloudMesh = null;
       this.cloudData = null;
     }
+    if (this.petalMesh) {
+      this.petalMesh.geometry.dispose();
+      this.petalMesh.material.dispose();
+      this.scene.remove(this.petalMesh);
+      this.petalMesh = null;
+      this.petalData = null;
+    }
+    if (this.monumentGroup) {
+      this.monumentGroup.children.forEach(c => {
+        if (c.geometry) c.geometry.dispose();
+        if (c.material) c.material.dispose();
+      });
+      this.scene.remove(this.monumentGroup);
+      this.monumentGroup = null;
+    }
+    this._tricolorTex = null;
   }
 
   // ── Tier gating ───────────────────────────────────────────────
@@ -495,7 +586,8 @@ export class WorldManager {
 
   // ── Obstacle placement generator ──────────────────────────────
   _generatePlacements(maxTier) {
-    const available   = OBSTACLE_DEFS.filter(d => d.tier <= maxTier);
+    const defs       = this.skin.obstacleDefs || OBSTACLE_DEFS;
+    const available   = defs.filter(d => d.tier <= maxTier);
     const densityMult = 1 + maxTier * 0.2;
     const count       = Math.floor(
       (this.isMobile ? this.skin.baseDensity.mobile : this.skin.baseDensity.desktop) * densityMult
@@ -593,6 +685,23 @@ export class WorldManager {
       const bob = Math.sin(elapsed * 0.6) * 0.6;
       this.chakraGroup.position.y = 20 + bob;
       if (this.chakraLight) this.chakraLight.position.y = this.chakraGroup.position.y;
+    }
+    if (this._tricolorTex && this.skin.groundScroll) {
+      this._tricolorTex.offset.y -= 0.0018; // slow scroll — "flowing flag" feel
+    }
+    if (this.petalMesh) {
+      const dummy = new THREE.Object3D();
+      this.petalData.forEach((p, i) => {
+        p.y -= p.fallSpeed;
+        if (p.y < -1) { p.y = 18 + Math.random() * 4; p.x = (Math.random() - 0.5) * 60; }
+        const driftX = p.x + Math.sin(elapsed * 0.5 + p.driftPhase) * 1.5;
+        dummy.position.set(driftX + worldShiftX * 0.6, p.y, p.z);
+        dummy.rotation.z = elapsed * 0.8 + p.spinPhase;
+        dummy.rotation.x = Math.sin(elapsed * 0.6 + p.spinPhase) * 0.4;
+        dummy.updateMatrix();
+        this.petalMesh.setMatrixAt(i, dummy.matrix);
+      });
+      this.petalMesh.instanceMatrix.needsUpdate = true;
     }
 
     if (this.cloudMesh) {
