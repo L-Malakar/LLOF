@@ -344,6 +344,19 @@ function _buildBanner(cfg = BANNER_CONFIG) {
  * Shows the banner only once per page load (sessionStorage).
  * To force it every single page load, remove the sessionStorage check.
  */
+import { registerEvent } from './event-hub.js';
+
+registerEvent({
+  id: 'summer',
+  name: 'SUMMER SALE',
+  getPhase: getEventPhase,
+  theme: { bg: 'linear-gradient(90deg, #ff6b00, #ff0080)', glow: 'rgba(255,107,0,0.45)' },
+  open: () => { if (!document.getElementById('event-banner-overlay')) _buildBanner(BANNER_CONFIGS[getEventPhase()]); },
+  overlayId: 'event-banner-overlay',
+  closeBtnId: 'banner-close-btn',
+  cardId: 'event-banner-card',
+});
+
 export function initBanner() {
   // Auto-popup on page load only during the pre/active/post windows —
   // not during the 11 'none' months of the year.
