@@ -41,9 +41,8 @@ initIndependenceBanner();
 initIndependenceBannerDevPreview();
 
 // ── Event button — reopens the banner ─────────────────────────
-refs.eventBtn.addEventListener('click', () => {
-  openEventBanner();
-});
+import { initEventHub } from './systems/event-hub.js';
+initEventHub();
 
 // ── Auto-hide idle cursor (desktop only) ───────────────────────
 // Hides the mouse pointer after 500ms of no movement, and brings
