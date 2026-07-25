@@ -1336,7 +1336,9 @@ canvas {
 ═══════════════════════════════════════════════════════════════ */
 
 #eventBtn {
-  background: linear-gradient(90deg, #ff6b00, #ff0080);
+  --evt-bg: linear-gradient(90deg, #ff6b00, #ff0080);
+  --evt-glow: rgba(255,107,0,0.45);
+  background: var(--evt-bg);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -1346,15 +1348,49 @@ canvas {
   font-weight: 700;
   letter-spacing: 2px;
   cursor: pointer;
-  box-shadow: 0 0 12px rgba(255,107,0,0.45);
-  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 0 12px var(--evt-glow);
+  transition: transform 0.15s, box-shadow 0.15s, background 0.2s;
   white-space: nowrap;
+  perspective: 400px;
 }
 
 #eventBtn:hover {
   transform: scale(1.06);
-  box-shadow: 0 0 22px rgba(255,107,0,0.7);
+  box-shadow: 0 0 22px var(--evt-glow);
 }
+
+#eventBtn.evt-flipping {
+  animation: evtFlip 0.5s ease-in-out;
+}
+@keyframes evtFlip {
+  0%   { transform: rotateY(0deg); }
+  50%  { transform: rotateY(90deg); }
+  100% { transform: rotateY(0deg); }
+}
+
+/* ── Card slide-in when paging between multiple event banners ─── */
+.evt-slide-in-right { animation: evtSlideInRight 0.4s cubic-bezier(0.22,1,0.36,1); }
+.evt-slide-in-left  { animation: evtSlideInLeft  0.4s cubic-bezier(0.22,1,0.36,1); }
+@keyframes evtSlideInRight { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes evtSlideInLeft  { from { transform: translateX(-60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+/* ── Paging arrows shown while any event banner is open ────────── */
+#evt-nav-arrows {
+  position: fixed; inset: 0; z-index: 9995;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 clamp(8px, 3vw, 40px); pointer-events: none;
+}
+#evt-nav-arrows button {
+  pointer-events: auto;
+  box-sizing: border-box;
+  width: 44px; height: 44px; padding: 0; margin: 0;
+  border-radius: 50%; flex-shrink: 0;
+  background: rgba(0,0,0,0.5); border: 1.5px solid rgba(255,255,255,0.25);
+  color: #fff; font-size: 26px; line-height: 1; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.15s, background 0.15s;
+}
+#evt-nav-arrows button:hover { transform: scale(1.12); background: rgba(0,0,0,0.75); }
 
 #map-btn-wrap {
   position: fixed;
