@@ -8,13 +8,13 @@
 
 ## [▶ Play Now](https://l-malakar.github.io/LLOF/)
 
-**Last Update:** `14-07-2026` (V-`2.26.8`)
+**Last Update:** `14-07-2026` (V-`2.26.9`)
 
 ### Latest Updates
-1. Add different camera angles and their logic.
-2. Add dynamic smooth camera movement along with the player movement.
-3. Some small UI improvements.
-
+1. Add a new map skin for the game. (avalable at 15th augst)
+2. Add shortcut button controls for desktop users. (more will be added soon)
+3. Optimize the game for chrome browser.
+4. Add developer specific new options. (Only available for developers inside `localhost:5500`)
 ---
 ## Project structure
 ```
