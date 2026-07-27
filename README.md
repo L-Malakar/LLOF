@@ -8,7 +8,7 @@
 
 ## [▶ Play Now](https://l-malakar.github.io/LLOF/)
 
-**Last Update:** `14-07-2026` (V-`2.26.9`)
+**Last Update:** `26-07-2026` (V-`2.26.9`)
 
 ### Latest Updates
 1. Add a new map skin for the game. (avalable at 15th augst)
