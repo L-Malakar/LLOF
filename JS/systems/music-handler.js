@@ -21,7 +21,10 @@ bgMusic.addEventListener('timeupdate', () => {
   localStorage.setItem('paperPlane_musicTime', bgMusic.currentTime);
 });
 
+let musicWanted = false; // true once startMusic() has been called
+
 export function startMusic() {
+  musicWanted = true;
   const saved = localStorage.getItem('paperPlane_musicTime');
   if (saved) bgMusic.currentTime = parseFloat(saved);
   bgMusic.play().catch(() => {
@@ -29,6 +32,16 @@ export function startMusic() {
     window.addEventListener('touchstart', () => bgMusic.play(), { once: true });
   });
 }
+
+// Pause music when tab/window is hidden, resume when visible again
+document.addEventListener('visibilitychange', () => {
+  if (!musicWanted) return;
+  if (document.hidden) {
+    bgMusic.pause();
+  } else {
+    bgMusic.play().catch(() => {});
+  }
+});
 
 export function setMusicVolume(vol) {
   musicVolume    = Math.max(0, Math.min(1, vol));
