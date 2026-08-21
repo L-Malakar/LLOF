@@ -1,5 +1,8 @@
 # [<img src="https://yt3.googleusercontent.com/Khmav_bBMzqoVJE8ubBONlKjNkwFLI07w7RfosBBB4jD9R6eQjJoZO-nnRAwfPbnNFRc_Zjx=s160-c-k-c0x00ffffff-no-rj" width="40" valign="middle"/>](https://www.youtube.com/@gdmalakar) LLOF - Terminal Loop
 
+
+L-Malakar
+
 - A web 3D game made with `HTML`, `CSS`, and `JS`.
 
 ### <a href="https://l-malakar.github.io/LLOF/"><img src="https://l-malakar.github.io/LLOF/asset/logo.svg" width="120" height="120" valign="middle"></a> [▶ Play Now](https://l-malakar.github.io/LLOF/)
